@@ -84,28 +84,74 @@ body.compact-mode .app-header {
    ===================================== */
 
 .sidebar {
-  width: 0;
-  /* Default collapsed state if not open */
+  width: 280px;
+  height: 100vh;
   background: var(--bg-secondary);
   border-right: 1px solid var(--border-color);
   display: flex;
   flex-direction: column;
-  height: 100%;
   flex-shrink: 0;
-  transition: width 0.3s ease, opacity 0.2s ease;
+  transition: transform 0.3s ease, width 0.3s ease;
   z-index: 50;
   overflow: hidden;
-  opacity: 0;
-}
-
-.sidebar.open {
-  width: 260px;
-  opacity: 1;
 }
 
 [dir="rtl"] .sidebar {
   border-right: none;
   border-left: 1px solid var(--border-color);
+}
+
+/* Desktop: Sidebar يزيح المحتوى */
+@media (min-width: 769px) {
+  .sidebar {
+    position: relative; /* جزء من التخطيط الطبيعي */
+  }
+  
+  .sidebar:not(.open) {
+    width: 0;
+  }
+}
+
+/* Mobile: Sidebar overlay فوق المحتوى */
+@media (max-width: 768px) {
+  .sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    transform: translateX(-100%); /* مخفي لليسار */
+    box-shadow: 2px 0 10px rgba(0, 0, 0, 0.5);
+  }
+
+  [dir="rtl"] .sidebar {
+    left: auto;
+    right: 0;
+    transform: translateX(100%); /* مخفي لليمين */
+  }
+
+  .sidebar.open {
+    transform: translateX(0); /* يظهر */
+  }
+
+  .mobile-overlay {
+    display: block;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.6);
+    z-index: 40;
+    backdrop-filter: blur(2px);
+    animation: fadeIn 0.3s ease-out;
+  }
+
+  /* في الحاسوب، نخفي الأوفرليه تماماً */
+  @media (min-width: 769px) {
+    .mobile-overlay {
+      display: none !important;
+    }
+  }
 }
 
 .sidebar-header {
@@ -296,49 +342,6 @@ body.compact-mode .app-header {
 .user-plan {
   font-size: 0.75rem;
   color: var(--text-muted);
-}
-
-/* Mobile Overlay */
-.sidebar-overlay {
-  display: none;
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.5);
-  z-index: 40;
-  opacity: 0;
-  transition: opacity 0.3s ease;
-}
-
-/* Mobile Responsive Sidebar */
-@media (max-width: 768px) {
-  .app-container {
-    position: relative;
-  }
-
-  .sidebar {
-    position: absolute;
-    left: 0;
-    top: 0;
-    bottom: 0;
-    transform: translateX(-100%);
-    width: 280px;
-    box-shadow: var(--shadow-md);
-  }
-
-  [dir="rtl"] .sidebar {
-    left: auto;
-    right: 0;
-    transform: translateX(100%);
-  }
-
-  .sidebar.open {
-    transform: translateX(0);
-  }
-
-  .sidebar-overlay.open {
-    display: block;
-    opacity: 1;
-  }
 }
 
 /* =====================================

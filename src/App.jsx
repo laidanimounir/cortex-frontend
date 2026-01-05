@@ -20,12 +20,11 @@ function App() {
   const [typingStatus, setTypingStatus] = useState('');
   const [isCompact, setIsCompact] = useState(false);
   const [showShortcuts, setShowShortcuts] = useState(false);
-  // Default to false on mobile, true on desktop
   const [isSidebarOpen, setIsSidebarOpen] = useState(window.innerWidth >= 768);
   
   const { chatHistory, saveChat, loadChat, deleteChat } = useChatHistory();
 
-  // Handle Resize Logic
+  // Auto adjust sidebar on window resize
   useEffect(() => {
     const handleResize = () => {
       if (window.innerWidth < 768) {
@@ -34,7 +33,6 @@ function App() {
         setIsSidebarOpen(true);
       }
     };
-
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
@@ -112,7 +110,7 @@ function App() {
       await clearSession();
       await createNewSession();
       setMessages([]);
-      if (window.innerWidth < 768) setIsSidebarOpen(false); // Close sidebar on mobile
+      if (window.innerWidth < 768) setIsSidebarOpen(false);
     } catch (error) {
       console.error('Error starting new chat:', error);
     }
@@ -120,12 +118,7 @@ function App() {
 
   const handleDeepThink = async (questionText) => {
     const t = translations[language];
-    const userMessage = {
-      type: 'user',
-      text: questionText,
-      metadata: null,
-      isDeepThink: true
-    };
+    const userMessage = { type: 'user', text: questionText, metadata: null, isDeepThink: true };
     setMessages(prev => [...prev, userMessage]);
     setIsTyping(true);
     setTypingStatus(t.deepThinking);
@@ -135,10 +128,7 @@ function App() {
       const botMessage = {
         type: 'bot',
         text: response.answer || 'No answer received.',
-        metadata: {
-          confidence: response.confidence,
-          question: response.question
-        },
+        metadata: { confidence: response.confidence, question: response.question },
         isDeepThink: true
       };
       setMessages(prev => [...prev, botMessage]);
@@ -165,9 +155,7 @@ function App() {
     if (userMessageIndex >= 0 && messages[userMessageIndex]?.type === 'user') {
       const userQuestion = messages[userMessageIndex].text;
       const wasDeepThink = messages[messageIndex]?.isDeepThink;
-
       setMessages(prev => prev.slice(0, messageIndex));
-
       if (wasDeepThink) {
         await handleDeepThink(userQuestion);
       } else {
@@ -212,15 +200,15 @@ function App() {
   };
 
   const handleToggleSidebar = () => {
-    setIsSidebarOpen(!isSidebarOpen);
+    setIsSidebarOpen(prev => !prev);
   };
 
   return (
     <div className="app-container">
-      {/* Mobile Overlay */}
-      {isSidebarOpen && window.innerWidth < 768 && (
+      {/* Mobile Overlay - يظهر فقط في الجوال */}
+      {isSidebarOpen && (
         <div 
-          className="sidebar-overlay mobile-only" 
+          className="mobile-overlay" 
           onClick={() => setIsSidebarOpen(false)}
         />
       )}
@@ -236,16 +224,16 @@ function App() {
       />
 
       <div className="main-content">
-      <Header 
-  language={language} 
-  onLanguageChange={handleLanguageChange}
-  toggleSidebar={handleToggleSidebar}
-  isSidebarOpen={isSidebarOpen}
-  onClearChat={handleClearChat}
-  onToggleCompact={handleToggleCompact}
-  isCompact={isCompact}
-  messages={messages}  
-/>
+        <Header 
+          language={language} 
+          onLanguageChange={handleLanguageChange}
+          onToggleSidebar={handleToggleSidebar}
+          isSidebarOpen={isSidebarOpen}
+          onClearChat={handleClearChat}
+          onToggleCompact={handleToggleCompact}
+          isCompact={isCompact}
+          messages={messages}
+        />
 
         <main className="chat-area">
           <ChatWindow 
