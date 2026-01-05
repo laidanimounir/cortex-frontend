@@ -49,7 +49,8 @@ function ChatWindow({ messages, language, isTyping, typingStatus, onSelectSugges
             <div className="messages-container">
              
                 {messages.length === 0 && (
-                    <SuggestedQuestions language={language} onSelect={onSelectSuggestion} />
+                    <SuggestedQuestions language={language} onSelectSuggestion={onSelectSuggestion} />
+
                 )}
 
                 {messages.map((msg, index) => (
