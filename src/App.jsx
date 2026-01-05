@@ -215,22 +215,24 @@ function App() {
   }, [isCompact]);
 
   // ✅ دالة Load Chat المحسّنة
-  const handleLoadChat = (chat) => {
-    // حفظ المحادثة الحالية قبل تحميل محادثة أخرى
-    if (messages.length > 0 && currentChatId) {
-      saveChat(messages, currentChatId);
-    }
+// ✅ دالة Load Chat المصححة
+const handleLoadChat = (chat) => {
+  // ✅ لا تحفظ المحادثة الحالية إذا كانت فارغة أو نفس المحادثة المطلوبة
+  if (messages.length > 0 && currentChatId && currentChatId !== chat.id) {
+    console.log('💾 Saving current chat before loading another...');
+    saveChat(messages, currentChatId);
+  }
+  
+  const loadedMessages = loadChat(chat.id);
+  if (loadedMessages) {
+    setMessages(loadedMessages);
+    setCurrentChatId(chat.id);
     
-    const loadedMessages = loadChat(chat.id);
-    if (loadedMessages) {
-      setMessages(loadedMessages);
-      setCurrentChatId(chat.id);
-      
-      if (window.innerWidth < 768) {
-        setIsSidebarOpen(false);
-      }
+    if (window.innerWidth < 768) {
+      setIsSidebarOpen(false);
     }
-  };
+  }
+};
 
   // ✅ دالة Delete Chat المحسّنة
   const handleDeleteChat = (chatId) => {
