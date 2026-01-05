@@ -1244,11 +1244,17 @@ body.compact-mode .app-header {
 .app-footer {
   text-align: center;
   color: var(--text-muted);
-  padding: 1rem;
-  font-size: 0.75rem;
+  padding: 0.5rem 1rem; 
+  font-size: 0.7rem; 
   background: transparent;
   flex-shrink: 0;
   border-top: 1px solid var(--border-color);
+  opacity: 0.6; 
+  transition: opacity 0.2s ease;
+}
+
+.app-footer:hover {
+  opacity: 1; 
 }
 
 /* =====================================
