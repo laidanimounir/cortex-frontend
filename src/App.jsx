@@ -21,6 +21,7 @@ function App() {
   const [isCompact, setIsCompact] = useState(false);
   const [showShortcuts, setShowShortcuts] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(window.innerWidth >= 768);
+  const [currentChatId, setCurrentChatId] = useState(null); // ✅ معرّف المحادثة الحالية
   
   const { chatHistory, saveChat, loadChat, deleteChat } = useChatHistory();
 
@@ -105,14 +106,35 @@ function App() {
     }
   };
 
+  // ✅ دالة New Chat المحسّنة
   const handleNewChat = async () => {
+    console.log('🆕 New Chat button clicked!');
+    
+    // ✅ حفظ المحادثة الحالية فقط إذا كانت تحتوي على رسائل
+    if (messages.length > 0) {
+      console.log('💾 Saving current chat...');
+      const chatId = currentChatId || Date.now();
+      saveChat(messages, chatId);
+    }
+    
+    // ✅ إنشاء معرّف جديد للمحادثة الجديدة
+    setCurrentChatId(Date.now());
+    setMessages([]);
+    
     try {
       await clearSession();
       await createNewSession();
-      setMessages([]);
-      if (window.innerWidth < 768) setIsSidebarOpen(false);
+      
+      if (window.innerWidth < 768) {
+        setIsSidebarOpen(false);
+      }
+      
+      console.log('✅ New chat created');
     } catch (error) {
-      console.error('Error starting new chat:', error);
+      console.error('❌ Error starting new chat:', error);
+      if (window.innerWidth < 768) {
+        setIsSidebarOpen(false);
+      }
     }
   };
 
@@ -164,11 +186,14 @@ function App() {
     }
   };
 
+  // ✅ دالة Clear Chat المحسّنة
   const handleClearChat = () => {
     if (messages.length > 0) {
-      saveChat(messages);
+      const chatId = currentChatId || Date.now();
+      saveChat(messages, chatId);
     }
     setMessages([]);
+    setCurrentChatId(Date.now()); // محادثة جديدة
   };
 
   const handleToggleCompact = () => {
@@ -189,13 +214,32 @@ function App() {
     }
   }, [isCompact]);
 
+  // ✅ دالة Load Chat المحسّنة
   const handleLoadChat = (chat) => {
+    // حفظ المحادثة الحالية قبل تحميل محادثة أخرى
+    if (messages.length > 0 && currentChatId) {
+      saveChat(messages, currentChatId);
+    }
+    
     const loadedMessages = loadChat(chat.id);
     if (loadedMessages) {
       setMessages(loadedMessages);
+      setCurrentChatId(chat.id);
+      
       if (window.innerWidth < 768) {
         setIsSidebarOpen(false);
       }
+    }
+  };
+
+  // ✅ دالة Delete Chat المحسّنة
+  const handleDeleteChat = (chatId) => {
+    deleteChat(chatId);
+    
+    // إذا كانت المحادثة المحذوفة هي المحادثة الحالية، ابدأ محادثة جديدة
+    if (chatId === currentChatId) {
+      setMessages([]);
+      setCurrentChatId(Date.now());
     }
   };
 
@@ -205,7 +249,6 @@ function App() {
 
   return (
     <div className="app-container">
-      {/* Mobile Overlay - يظهر فقط في الجوال */}
       {isSidebarOpen && (
         <div 
           className="mobile-overlay" 
@@ -220,7 +263,8 @@ function App() {
         onNewChat={handleNewChat}
         chatHistory={chatHistory}
         onLoadChat={handleLoadChat}
-        onDeleteChat={deleteChat}
+        onDeleteChat={handleDeleteChat}
+        activeChatId={currentChatId}
       />
 
       <div className="main-content">

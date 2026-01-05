@@ -1,11 +1,9 @@
 import React from 'react';
 import { translations } from '../utils/translations';
 
-
 function Sidebar({ language, isOpen, onClose, onNewChat, chatHistory, onLoadChat, onDeleteChat, activeChatId }) {
     const t = translations[language];
 
-   
     const groupChatsByDate = (history) => {
         const groups = {
             today: [],
@@ -23,7 +21,6 @@ function Sidebar({ language, isOpen, onClose, onNewChat, chatHistory, onLoadChat
 
         history.forEach(chat => {
             const chatDate = new Date(chat.timestamp || Date.now());
-           
             const compareDate = new Date(chatDate.getFullYear(), chatDate.getMonth(), chatDate.getDate());
 
             if (compareDate.getTime() === today.getTime()) {
@@ -77,16 +74,22 @@ function Sidebar({ language, isOpen, onClose, onNewChat, chatHistory, onLoadChat
         );
     };
 
+    // ✅ دالة معدّلة لزر New Chat تغلق القائمة في الهاتف
+    const handleNewChat = () => {
+        onNewChat(); // استدعاء دالة بدء محادثة جديدة
+        if (window.innerWidth < 768 && onClose) {
+            onClose(); // إغلاق القائمة في الهاتف بعد النقر
+        }
+    };
+
     return (
         <>
-            <div
-                className={`sidebar-overlay ${isOpen ? 'open' : ''}`}
-                onClick={onClose}
-            />
-
-            <aside className={`sidebar ${isOpen ? 'open' : ''}`} >
+            {/* Mobile Overlay - لا نحتاجه هنا، موجود في App.jsx */}
+            
+            <aside className={`sidebar ${isOpen ? 'open' : ''}`}>
                 <div className="sidebar-header">
-                    <button className="new-chat-btn" onClick={onNewChat}>
+                    {/* ✅ الزر المصحح */}
+                    <button className="new-chat-btn" onClick={handleNewChat}>
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                             <line x1="12" y1="5" x2="12" y2="19"></line>
                             <line x1="5" y1="12" x2="19" y2="12"></line>
