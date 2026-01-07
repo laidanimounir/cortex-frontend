@@ -1,4 +1,3 @@
-
 export const translations = {
   ar: {
     // Header
@@ -55,6 +54,18 @@ export const translations = {
       { id: 2, text: 'صحح الكود الخاص بي', icon: 'code' },
       { id: 3, text: 'عصف ذهني للأفكار', icon: 'idea' }
     ],
+
+    //  Auth (جديد)
+    welcomeBack: "مرحباً بعودتك!",
+    email: "البريد الإلكتروني",
+    emailPlaceholder: "أدخل بريدك الإلكتروني",
+    password: "كلمة المرور",
+    passwordPlaceholder: "أدخل كلمة المرور",
+    login: "تسجيل الدخول",
+    orSignInWith: "أو سجل الدخول باستخدام",
+    continueWithGoogle: "تابع مع Google",
+    dontHaveAccount: "ليس لديك حساب؟",
+    signUp: "سجل الآن",
 
     // Footer
     footer: "© 2025 – بناه منير"
@@ -116,6 +127,18 @@ export const translations = {
       { id: 3, text: 'Brainstorm ideas', icon: 'idea' }
     ],
 
+    //  Auth (جديد)
+    welcomeBack: "Welcome Back!",
+    email: "Email",
+    emailPlaceholder: "Enter your email",
+    password: "Password",
+    passwordPlaceholder: "Enter your password",
+    login: "Login",
+    orSignInWith: "Or sign in with",
+    continueWithGoogle: "Continue with Google",
+    dontHaveAccount: "Don't have an account?",
+    signUp: "Sign up",
+
     // Footer
     footer: "© 2025 – Built by Mounir"
   },
@@ -175,6 +198,18 @@ export const translations = {
       { id: 2, text: 'Meinen Code debuggen', icon: 'code' },
       { id: 3, text: 'Ideen brainstormen', icon: 'idea' }
     ],
+
+    // Auth (جديد)
+    welcomeBack: "Willkommen zurück!",
+    email: "E-Mail",
+    emailPlaceholder: "Geben Sie Ihre E-Mail ein",
+    password: "Passwort",
+    passwordPlaceholder: "Geben Sie Ihr Passwort ein",
+    login: "Anmelden",
+    orSignInWith: "Oder melden Sie sich an mit",
+    continueWithGoogle: "Weiter mit Google",
+    dontHaveAccount: "Sie haben noch kein Konto?",
+    signUp: "Registrieren",
 
     // Footer
     footer: "© 2025 – Erstellt von Mounir"
