@@ -3,7 +3,8 @@ import { translations } from '../utils/translations';
 
 
 function Footer({ language }) {
-    const t = translations[language];
+    const t = translations[language] || translations['en'];
+
 
     return (
         <footer className="app-footer">

@@ -1,13 +1,21 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import './LanguageSelection.css';
 
-function LanguageSelection({ onSelectLanguage }) {
+function LanguageSelection() {
+const navigate = useNavigate();
+
 const languages = [
 { code: 'en', name: 'English', flag: '🇬🇧' },
 { code: 'fr', name: 'Français', flag: '🇫🇷' },
 { code: 'ar', name: 'العربية', flag: '🇸🇦' },
 { code: 'es', name: 'Español', flag: '🇪🇸' },
 ];
+
+const handleLanguageSelect = (languageCode) => {
+localStorage.setItem('selectedLanguage', languageCode);
+navigate('/login');
+};
 
 return (
 <div className="language-selection-container">
@@ -21,7 +29,7 @@ text
         <button
           key={lang.code}
           className="language-button"
-          onClick={() => onSelectLanguage(lang.code)}
+          onClick={() => handleLanguageSelect(lang.code)}
         >
           <span className="language-flag">{lang.flag}</span>
           <span className="language-name">{lang.name}</span>

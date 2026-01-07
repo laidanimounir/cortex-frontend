@@ -7,7 +7,8 @@ import { translations } from '../utils/translations';
 import SuggestedQuestions from './SuggestedQuestions';
 
 function ChatWindow({ messages, language, isTyping, typingStatus, onSelectSuggestion, onRegenerateResponse }) {
-    const t = translations[language];
+    const t = translations[language] || translations['en'];
+
     const messagesEndRef = useRef(null);
     const [copiedIndex, setCopiedIndex] = useState(null);
 

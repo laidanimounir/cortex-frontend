@@ -2,7 +2,8 @@ import React from 'react';
 import { translations } from '../utils/translations';
 
 function Sidebar({ language, isOpen, onClose, onNewChat, chatHistory, onLoadChat, onDeleteChat, activeChatId }) {
-    const t = translations[language];
+    const t = translations[language] || translations['en'];
+
 
     const groupChatsByDate = (history) => {
         const groups = {

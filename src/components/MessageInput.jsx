@@ -3,7 +3,8 @@ import { translations } from '../utils/translations';
 
 
 function MessageInput({ language, onSendMessage, onDeepThink, disabled }) {
-    const t = translations[language];
+    const t = translations[language] || translations['en'];
+
     const [input, setInput] = useState('');
     const [selectedModel, setSelectedModel] = useState('cortex'); 
     const [showModelMenu, setShowModelMenu] = useState(false);

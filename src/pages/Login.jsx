@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { translations } from '../utils/translations';
 import './Login.css';
@@ -7,29 +7,30 @@ function Login() {
   const [language, setLanguage] = useState('en');
 
   useEffect(() => {
-    // قراءة اللغة المحفوظة
+  
     const savedLang = localStorage.getItem('selectedLanguage') || 'en';
     setLanguage(savedLang);
     document.documentElement.dir = savedLang === 'ar' ? 'rtl' : 'ltr';
   }, []);
 
-  const t = translations[language];
+  const t = translations[language] || translations['en'];
+
 
   const handleLogin = (e) => {
     e.preventDefault();
-    // الانتقال مباشرة للشات (بدون validation)
+    
     navigate('/chat');
   };
 
   const handleGoogleLogin = () => {
-    // الانتقال مباشرة للشات
+  
     navigate('/chat');
   };
 
   return (
     <div className="login-page">
       <div className="login-container">
-        {/* Logo */}
+    
         <div className="login-header">
           <div className="logo">
             <span className="logo-icon">🧠</span>
@@ -38,7 +39,7 @@ function Login() {
           <p className="login-subtitle">{t.welcomeBack || 'Welcome Back!'}</p>
         </div>
 
-        {/* Login Form */}
+    
         <form className="login-form" onSubmit={handleLogin}>
           <div className="form-group">
             <label className="form-label">{t.email || 'Email'}</label>
@@ -63,12 +64,12 @@ function Login() {
           </button>
         </form>
 
-        {/* Divider */}
+     
         <div className="divider">
           <span>{t.orSignInWith || 'Or sign in with'}</span>
         </div>
 
-        {/* Google Sign-in */}
+    
         <button className="google-btn" onClick={handleGoogleLogin}>
           <svg width="20" height="20" viewBox="0 0 24 24">
             <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
@@ -79,7 +80,7 @@ function Login() {
           <span>{t.continueWithGoogle || 'Continue with Google'}</span>
         </button>
 
-        {/* Footer */}
+       
         <p className="login-footer">
           {t.dontHaveAccount || "Don't have an account?"}{' '}
           <span className="signup-link">{t.signUp || 'Sign up'}</span>

@@ -4,7 +4,8 @@ import jsPDF from 'jspdf';
 
 
 function Header({ language, onLanguageChange, onClearChat, onToggleCompact, isCompact, messages, onToggleSidebar }) {
-    const t = translations[language];
+    const t = translations[language] || translations['en'];
+
     const [showExportMenu, setShowExportMenu] = useState(false);
     const [showClearConfirm, setShowClearConfirm] = useState(false);
 

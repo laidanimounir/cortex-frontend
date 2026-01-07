@@ -140,7 +140,8 @@ function ChatPage() {
   };
 
   const handleDeepThink = async (questionText) => {
-    const t = translations[language];
+    const t = translations[language] || translations['en'];
+
     const userMessage = { type: 'user', text: questionText, metadata: null, isDeepThink: true };
     setMessages(prev => [...prev, userMessage]);
     setIsTyping(true);
@@ -265,14 +266,16 @@ function ChatPage() {
       />
 
       <div className="main-content">
-        <Header
-          language={language}
-          onLanguageChange={handleLanguageChange}
-          onToggleSidebar={handleToggleSidebar}
-          onClearChat={handleClearChat}
-          onToggleCompact={handleToggleCompact}
-          isCompact={isCompact}
-        />
+      <Header
+  language={language}
+  onLanguageChange={handleLanguageChange}
+  onToggleSidebar={handleToggleSidebar}
+  onClearChat={handleClearChat}
+  onToggleCompact={handleToggleCompact}
+  isCompact={isCompact}
+  messages={messages}
+/>
+
 
         <div className="chat-area">
           <ChatWindow
