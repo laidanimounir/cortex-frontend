@@ -25,7 +25,7 @@ function ChatPage() {
   
   const { chatHistory, saveChat, loadChat, deleteChat, renameChat } = useChatHistory();
 
-  // ✅ قراءة اللغة من localStorage عند التحميل
+
   useEffect(() => {
     const savedLang = localStorage.getItem('selectedLanguage') || 'en';
     setLanguage(savedLang);

@@ -1,8 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { translations } from '../utils/translations';
 import './Login.css';
-
 function Login() {
   const navigate = useNavigate();
   const [language, setLanguage] = useState('en');
