@@ -7,7 +7,7 @@ const MODEL_OPTIONS = [
   { id: 'cortex-vision', labelKey: 'modelVision', descKey: 'modelVisionDesc', icon: '🎯' },
 ];
 
-function MessageInput({ onSendMessage, disabled, selectedModel, onModelChange }) {
+function MessageInput({ onSendMessage, disabled, selectedModel, onModelChange, imageMode, onImageModeToggle }) {
   const { language, t } = useLanguage();
 
   const [input, setInput] = useState('');
@@ -48,6 +48,17 @@ function MessageInput({ onSendMessage, disabled, selectedModel, onModelChange })
         <div className="tool-selector-container" ref={menuRef}>
           <button
             type="button"
+            className={`tool-selector-btn ${imageMode ? 'image-mode-active' : ''}`}
+            onClick={onImageModeToggle}
+            title={imageMode ? (language === 'ar' ? 'وضع النص' : 'Text Mode') : (language === 'ar' ? 'وضع الصور' : 'Image Mode')}
+            disabled={disabled}
+          >
+            {imageMode ? '✕' : '🖼'}
+          </button>
+
+          {!imageMode && (
+          <button
+            type="button"
             className="tool-selector-btn"
             onClick={() => setShowModelMenu(!showModelMenu)}
             title={t.selectModel}
@@ -55,6 +66,7 @@ function MessageInput({ onSendMessage, disabled, selectedModel, onModelChange })
           >
             {currentIcon}
           </button>
+          )}
 
           {showModelMenu && (
             <div className="tool-menu">
@@ -89,7 +101,7 @@ function MessageInput({ onSendMessage, disabled, selectedModel, onModelChange })
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={handleKeyDown}
-          placeholder={t.inputPlaceholder}
+          placeholder={imageMode ? (language === 'ar' ? 'صف الصورة التي تريد توليدها...' : 'Describe the image you want to generate...') : t.inputPlaceholder}
           disabled={disabled}
           rows={1}
           style={{

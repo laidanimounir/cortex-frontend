@@ -5,16 +5,16 @@ import MessageInput from '../components/MessageInput';
 import Footer from '../components/Footer';
 import Sidebar from '../components/Sidebar';
 import ShortcutsModal from '../components/ShortcutsModal';
+import UserProfileSetup from '../components/UserProfileSetup';
 import { useLanguage } from '../contexts/LanguageContext';
-import { useToast } from '../contexts/ToastContext';
+
 import useKeyboardShortcuts from '../hooks/useKeyboardShortcuts';
 import useChatHistory from '../hooks/useChatHistory';
 import { sendMessage } from '../services/chat';
 import '../App.css';
 
 function ChatPage() {
-  const { language, setLanguage, t } = useLanguage();
-  const { showToast } = useToast();
+  const { language, t } = useLanguage();
   const [loading, setLoading] = useState(false);
   const [messages, setMessages] = useState([]);
   const [isTyping, setIsTyping] = useState(false);
@@ -25,8 +25,32 @@ function ChatPage() {
   const [currentChatId, setCurrentChatId] = useState(null);
   const [selectedModel, setSelectedModel] = useState('cortex-fast');
   const [focusMode, setFocusMode] = useState(false);
+  const [imageMode, setImageMode] = useState(false);
+
+  const needsWebSearch = (text) => {
+    const keywords = ['latest', 'today', 'current', 'news', '2024', '2025', '2026', 'who is', 'what happened', 'what is new', 'recent', 'update', 'breaking'];
+    const lower = text.toLowerCase();
+    return keywords.some(k => lower.includes(k));
+  };
 
   const { chatHistory, saveChat, loadChat, deleteChat, renameChat } = useChatHistory();
+
+  const [showProfileSetup, setShowProfileSetup] = useState(false);
+  const [userProfile, setUserProfile] = useState(null);
+
+  useEffect(() => {
+    const stored = localStorage.getItem('cortex_user_profile');
+    if (!stored) {
+      setShowProfileSetup(true);
+    } else {
+      try { setUserProfile(JSON.parse(stored)); } catch { /* invalid profile */ }
+    }
+  }, []);
+
+  const handleProfileSave = (profile) => {
+    setUserProfile(profile);
+    setShowProfileSetup(false);
+  };
 
   useEffect(() => {
     const handleResize = () => {
@@ -52,6 +76,45 @@ function ChatPage() {
       model: null,
     };
 
+    if (imageMode) {
+      const botMessage = {
+        id: Date.now() + 1,
+        type: 'bot',
+        text: '',
+        metadata: null,
+        model: 'image',
+        streaming: true,
+      };
+      setMessages(prev => [...prev, userMessage, botMessage]);
+      setLoading(true);
+      setIsTyping(true);
+      setTypingStatus(language === 'ar' ? 'جارٍ توليد الصورة...' : 'Generating image...');
+
+      try {
+        const encoded = encodeURIComponent(questionText);
+        const imageUrl = `https://image.pollinations.ai/prompt/${encoded}`;
+        setMessages(prev =>
+          prev.map(m =>
+            m.id === botMessage.id
+              ? { ...m, text: imageUrl, streaming: false, isImage: true }
+              : m
+          )
+        );
+      } catch {
+        setMessages(prev =>
+          prev.map(m =>
+            m.id === botMessage.id
+              ? { ...m, text: language === 'ar' ? 'فشل توليد الصورة' : 'Image generation failed', streaming: false, error: true }
+              : m
+          )
+        );
+      }
+      setLoading(false);
+      setIsTyping(false);
+      setTypingStatus('');
+      return;
+    }
+
     const botMessageId = Date.now() + 1;
     const botMessage = {
       id: botMessageId,
@@ -67,10 +130,38 @@ function ChatPage() {
     setIsTyping(true);
     setTypingStatus(t.analyzing || '');
 
+    let webSearchContext = null;
+
+    if (needsWebSearch(questionText)) {
+      setTypingStatus(language === 'ar' ? '🔍 جاري البحث في الويب...' : '🔍 Searching web...');
+      try {
+        const searchRes = await fetch('http://localhost:3001/search', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ query: questionText }),
+        });
+        const searchData = await searchRes.json();
+        if (searchData.results && searchData.results.length > 0) {
+          webSearchContext = searchData.results;
+        }
+      } catch {
+        // search failed silently
+      }
+      setTypingStatus(t.analyzing || '');
+    }
+
     const chatMessages = [...messages, userMessage].map(m => ({
       role: m.type === 'user' ? 'user' : 'assistant',
       content: m.text,
     }));
+
+    if (webSearchContext) {
+      const snippets = webSearchContext.map(r => r.content).filter(Boolean).join('\n');
+      chatMessages.push({
+        role: 'system',
+        content: `Here is recent web data: ${snippets}. Use it to answer the user's question.`,
+      });
+    }
 
     await sendMessage({
       messages: chatMessages,
@@ -88,13 +179,14 @@ function ChatPage() {
         );
       },
       onDone: () => {
-        setMessages(prev =>
-          prev.map(m =>
+        setMessages(prev => {
+          let updated = prev.map(m =>
             m.id === botMessageId
-              ? { ...m, streaming: false }
+              ? { ...m, streaming: false, webSources: webSearchContext || undefined }
               : m
-          )
-        );
+          );
+          return updated;
+        });
         setLoading(false);
         setIsTyping(false);
         setTypingStatus('');
@@ -213,6 +305,10 @@ function ChatPage() {
 
   return (
     <div className="app-container">
+      {showProfileSetup && (
+        <UserProfileSetup onSave={handleProfileSave} initialProfile={userProfile} />
+      )}
+
       {isSidebarOpen && (
         <div
           className="mobile-overlay"
@@ -229,6 +325,7 @@ function ChatPage() {
         onDeleteChat={handleDeleteChat}
         onRenameChat={renameChat}
         activeChatId={currentChatId}
+        onEditProfile={() => setShowProfileSetup(true)}
       />
 
       <div className="main-content">
@@ -257,6 +354,8 @@ function ChatPage() {
           disabled={loading}
           selectedModel={selectedModel}
           onModelChange={setSelectedModel}
+          imageMode={imageMode}
+          onImageModeToggle={() => setImageMode(prev => !prev)}
         />
 
         <Footer />

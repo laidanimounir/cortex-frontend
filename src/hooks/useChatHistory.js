@@ -1,30 +1,86 @@
 import { useState, useEffect } from 'react';
+import { supabase } from '../lib/supabase';
 
 function useChatHistory() {
     const [chatHistory, setChatHistory] = useState([]);
     const STORAGE_KEY = 'cortex_chat_history';
-    const MAX_HISTORY = 50; // ✅ زيادة العدد لـ 50 محادثة
+    const MAX_HISTORY = 50;
 
-    // Load history from localStorage on mount
     useEffect(() => {
-        try {
-            const stored = localStorage.getItem(STORAGE_KEY);
-            if (stored) {
-                setChatHistory(JSON.parse(stored));
+        async function loadFromSupabase() {
+            if (supabase) {
+                try {
+                    const { data, error } = await supabase
+                        .from('conversations')
+                        .select('*')
+                        .order('updated_at', { ascending: false })
+                        .limit(MAX_HISTORY);
+                    if (!error && data) {
+                        const mapped = data.map(row => ({
+                            id: row.id,
+                            timestamp: row.updated_at || row.created_at,
+                            title: row.title,
+                            preview: row.title,
+                            messages: row.messages || [],
+                        }));
+                        setChatHistory(mapped);
+                        return true;
+                    }
+                } catch {
+                    // fall through
+                }
             }
-        } catch (error) {
-            console.error('Error loading chat history:', error);
+            return false;
         }
+        (async () => {
+            const loaded = await loadFromSupabase();
+            if (!loaded) {
+                try {
+                    const stored = localStorage.getItem(STORAGE_KEY);
+                    if (stored) {
+                        setChatHistory(JSON.parse(stored));
+                    }
+                } catch (error) {
+                    console.error('Error loading chat history:', error);
+                }
+            }
+        })();
     }, []);
 
-    // ✅ دالة Save محسّنة تقبل chatId اختياري
-    const saveChat = (messages, chatId = null) => {
+    const saveToSupabase = async (chat) => {
+        if (!supabase) return false;
+        try {
+            const { error } = await supabase
+                .from('conversations')
+                .upsert({
+                    id: chat.id,
+                    title: chat.title,
+                    messages: chat.messages,
+                    updated_at: new Date().toISOString(),
+                }, { onConflict: 'id' });
+            return !error;
+        } catch {
+            return false;
+        }
+    };
+
+    const deleteFromSupabase = async (chatId) => {
+        if (!supabase) return false;
+        try {
+            const { error } = await supabase
+                .from('conversations')
+                .delete()
+                .eq('id', chatId);
+            return !error;
+        } catch {
+            return false;
+        }
+    };
+
+    const saveChat = async (messages, chatId = null) => {
         if (!messages || messages.length === 0) return;
 
-        // ✅ استخدم chatId الممرر أو أنشئ واحد جديد
         const finalChatId = chatId || Date.now();
-        
-        // ✅ البحث عن محادثة موجودة بنفس الـ ID
         const existingChatIndex = chatHistory.findIndex(c => c.id === finalChatId);
 
         const newChat = {
@@ -32,13 +88,12 @@ function useChatHistory() {
             timestamp: new Date().toISOString(),
             messages: messages,
             title: messages[0]?.text?.substring(0, 50) || 'New chat',
-            preview: messages[0]?.text?.substring(0, 50) || 'New chat'
+            preview: messages[0]?.text?.substring(0, 50) || 'New chat',
         };
 
         let updatedHistory;
 
         if (existingChatIndex !== -1) {
-            // ✅ تحديث المحادثة الموجودة
             updatedHistory = [...chatHistory];
             updatedHistory[existingChatIndex] = newChat;
         } else {
@@ -47,51 +102,65 @@ function useChatHistory() {
 
         setChatHistory(updatedHistory);
 
-        try {
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedHistory));
-        } catch (error) {
-            console.error('Error saving chat history:', error);
+        const saved = await saveToSupabase(newChat);
+        if (!saved) {
+            try {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedHistory));
+            } catch (error) {
+                console.error('Error saving chat history:', error);
+            }
         }
     };
 
-    // Load specific chat by ID
     const loadChat = (chatId) => {
         const chat = chatHistory.find(c => c.id === chatId);
         return chat ? chat.messages : null;
     };
 
-    // Delete specific chat
-    const deleteChat = (chatId) => {
+    const deleteChat = async (chatId) => {
         const updated = chatHistory.filter(c => c.id !== chatId);
         setChatHistory(updated);
-        try {
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
-        } catch (error) {
-            console.error('Error deleting chat:', error);
+
+        const deleted = await deleteFromSupabase(chatId);
+        if (!deleted) {
+            try {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+            } catch (error) {
+                console.error('Error deleting chat:', error);
+            }
         }
     };
 
-    // Rename a chat
-    const renameChat = (chatId, newTitle) => {
+    const renameChat = async (chatId, newTitle) => {
         if (!chatId || !newTitle) return;
         const updated = chatHistory.map(c =>
             c.id === chatId ? { ...c, title: newTitle, preview: newTitle } : c
         );
         setChatHistory(updated);
-        try {
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
-        } catch (error) {
-            console.error('Error renaming chat:', error);
+
+        const saved = await saveToSupabase({ id: chatId, title: newTitle, messages: updated.find(c => c.id === chatId)?.messages || [] });
+        if (!saved) {
+            try {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+            } catch (error) {
+                console.error('Error renaming chat:', error);
+            }
         }
     };
 
-    // Clear all history
-    const clearHistory = () => {
+    const clearHistory = async () => {
         setChatHistory([]);
+        if (supabase) {
+            try {
+                await supabase.from('conversations').delete().neq('id', 'none');
+            } catch {
+                // ignore
+            }
+        }
         try {
             localStorage.removeItem(STORAGE_KEY);
-        } catch (error) {
-            console.error('Error clearing history:', error);
+        } catch {
+            // ignore
         }
     };
 
@@ -101,7 +170,7 @@ function useChatHistory() {
         loadChat,
         deleteChat,
         renameChat,
-        clearHistory
+        clearHistory,
     };
 }
 

@@ -3,6 +3,9 @@ import ReactMarkdown from 'react-markdown';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import remarkGfm from 'remark-gfm';
+import rehypeRaw from 'rehype-raw';
+import { preprocessMath } from './MathRenderer';
+import 'katex/dist/katex.min.css';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useToast } from '../contexts/ToastContext';
 import { useMessageRatings } from '../hooks/useMessageRatings';
@@ -91,28 +94,72 @@ function ChatWindow({ messages, isTyping, typingStatus, onSelectSuggestion, onRe
                 </div>
               )}
 
-              {msg.type === 'bot' && msg.text && (
+              {msg.type === 'bot' && msg.isImage && msg.text && (
+                <div className="message-image-container">
+                  <div className="image-loading-spinner">
+                    <div className="spinner" />
+                    <span>{language === 'ar' ? 'جارٍ تحميل الصورة...' : 'Loading image...'}</span>
+                  </div>
+                  <img
+                    src={msg.text}
+                    alt="Generated"
+                    className="generated-image"
+                    onLoad={(e) => {
+                      e.target.style.display = 'block';
+                      e.target.previousElementSibling.style.display = 'none';
+                    }}
+                    onError={(e) => {
+                      e.target.style.display = 'none';
+                      e.target.previousElementSibling.innerHTML = language === 'ar' ? 'فشل تحميل الصورة' : 'Failed to load image';
+                    }}
+                    style={{ display: 'none' }}
+                  />
+                  <a
+                    href={msg.text}
+                    download={`cortex-image-${msg.id || 'download'}.png`}
+                    className="image-download-btn"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                      <polyline points="7 10 12 15 17 10" />
+                      <line x1="12" y1="15" x2="12" y2="3" />
+                    </svg>
+                    <span>{language === 'ar' ? 'تحميل' : 'Download'}</span>
+                  </a>
+                </div>
+              )}
+
+              {msg.type === 'bot' && msg.text && !msg.isImage && (
                 <>
-                  <div className="message-text markdown-content">
+                    <div className="message-text markdown-content">
                     <ReactMarkdown
                       remarkPlugins={[remarkGfm]}
+                      rehypePlugins={[rehypeRaw]}
                       components={{
-                        code({ node, inline, className, children, ...props }) {
+                        code({ inline, className, children, ...props }) {
                           const match = /language-(\w+)/.exec(className || '');
                           if (!inline && match) {
                             const codeString = String(children).replace(/\n$/, '');
+                            const langLabel = match[1] === 'python' ? 'Python' : match[1] === 'javascript' ? 'JavaScript' : match[1] === 'typescript' ? 'TypeScript' : match[1] === 'html' ? 'HTML' : match[1] === 'css' ? 'CSS' : match[1] === 'bash' ? 'Bash' : match[1] === 'json' ? 'JSON' : match[1] === 'jsx' ? 'JSX' : match[1] === 'tsx' ? 'TSX' : match[1];
                             return (
                               <div className="code-block-wrapper">
-                                <button
-                                  className="code-copy-btn"
-                                  onClick={() => copyCode(codeString)}
-                                >
-                                  {copiedCodeBlock === codeString.slice(0, 20) ? t.copied : t.copyCode}
-                                </button>
+                                <div className="code-block-header">
+                                  <span className="code-lang-label">{langLabel}</span>
+                                  <button
+                                    className="code-copy-btn"
+                                    onClick={() => copyCode(codeString)}
+                                  >
+                                    {copiedCodeBlock === codeString.slice(0, 20) ? t.copied : t.copyCode}
+                                  </button>
+                                </div>
                                 <SyntaxHighlighter
                                   style={vscDarkPlus}
                                   language={match[1]}
                                   PreTag="div"
+                                  showLineNumbers
+                                  lineNumberStyle={{ minWidth: '2.5em', paddingRight: '1em', color: '#6B7280', userSelect: 'none', textAlign: 'right' }}
                                   {...props}
                                 >
                                   {codeString}
@@ -128,7 +175,7 @@ function ChatWindow({ messages, isTyping, typingStatus, onSelectSuggestion, onRe
                         },
                       }}
                     >
-                      {msg.text}
+                      {preprocessMath(msg.text)}
                     </ReactMarkdown>
                   </div>
                   {msg.streaming && <span className="streaming-cursor" />}
@@ -184,6 +231,28 @@ function ChatWindow({ messages, isTyping, typingStatus, onSelectSuggestion, onRe
                       </svg>
                     </button>
                   </div>
+
+                  {msg.webSources && msg.webSources.length > 0 && (
+                    <div className="web-sources">
+                      <div className="sources-title">
+                        {language === 'ar' ? 'المصادر' : 'Sources'}
+                      </div>
+                      <div className="sources-list">
+                        {msg.webSources.slice(0, 5).map((source, si) => (
+                          <a
+                            key={si}
+                            href={source.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="source-card"
+                          >
+                            <span className="source-title">{source.title || source.url}</span>
+                            <span className="source-url">{source.url}</span>
+                          </a>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </>
               )}
 

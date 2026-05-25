@@ -1,9 +1,26 @@
 export async function sendMessage({ messages, model, language, onToken, onDone, onError }) {
   try {
+    let profilePrompt = null;
+    try {
+      const stored = localStorage.getItem('cortex_user_profile');
+      if (stored) {
+        const profile = JSON.parse(stored);
+        if (profile.interests && profile.interests.length > 0 && profile.level) {
+          profilePrompt = `The user is interested in: ${profile.interests.join(', ')}. Their level is: ${profile.level}. Adapt your answers accordingly.`;
+        }
+      }
+    } catch {
+        // profile not available
+    }
+
+    const enrichedMessages = profilePrompt
+      ? [{ role: 'system', content: profilePrompt }, ...messages]
+      : messages;
+
     const response = await fetch('http://localhost:3001/', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ messages, model, language }),
+      body: JSON.stringify({ messages: enrichedMessages, model, language }),
     });
 
     if (!response.ok) {

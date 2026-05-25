@@ -29,10 +29,11 @@ if (fs.existsSync(envPath)) {
 
 async function start() {
   const chatHandler = require('./api/chat.cjs');
+  const searchHandler = require('./api/search.cjs');
 
   const server = http.createServer((req, res) => {
     res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
     if (req.method === 'OPTIONS') {
@@ -52,7 +53,13 @@ async function start() {
         console.error('Parse error:', e.message);
         req.body = {};
       }
-      chatHandler(req, wrapRes(res));
+
+      const url = new URL(req.url, `http://${req.headers.host}`);
+      if (url.pathname === '/search') {
+        searchHandler(req, wrapRes(res));
+      } else {
+        chatHandler(req, wrapRes(res));
+      }
     });
   });
 
