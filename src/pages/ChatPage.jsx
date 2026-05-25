@@ -203,7 +203,8 @@ function ChatPage() {
 
   useKeyboardShortcuts({
     onClearChat: handleClearChat,
-    onShowShortcuts: () => setShowShortcuts(true)
+    onShowShortcuts: () => setShowShortcuts(true),
+    onToggleSidebar: handleToggleSidebar
   });
 
   useEffect(() => {

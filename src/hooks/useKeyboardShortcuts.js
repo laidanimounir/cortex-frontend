@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 
 
-function useKeyboardShortcuts({ onClearChat, onShowShortcuts }) {
+function useKeyboardShortcuts({ onClearChat, onShowShortcuts, onToggleSidebar }) {
     useEffect(() => {
         const handleKeyDown = (e) => {
             
@@ -15,11 +15,16 @@ function useKeyboardShortcuts({ onClearChat, onShowShortcuts }) {
                 e.preventDefault();
                 onShowShortcuts();
             }
+
+            if (e.ctrlKey && e.key === 'b') {
+                e.preventDefault();
+                if (onToggleSidebar) onToggleSidebar();
+            }
         };
 
         window.addEventListener('keydown', handleKeyDown);
         return () => window.removeEventListener('keydown', handleKeyDown);
-    }, [onClearChat, onShowShortcuts]);
+    }, [onClearChat, onShowShortcuts, onToggleSidebar]);
 }
 
 export default useKeyboardShortcuts;

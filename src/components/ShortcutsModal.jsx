@@ -40,6 +40,13 @@ function ShortcutsModal({ isOpen, onClose, language }) {
             <span>{t.close || 'Close'}</span>
             <kbd>Esc</kbd>
           </div>
+
+          <div className="shortcut-item">
+            <span>Toggle Sidebar</span>
+            <div>
+              <kbd>Ctrl</kbd> + <kbd>B</kbd>
+            </div>
+          </div>
         </div>
       </div>
     </div>
