@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Header from '../components/Header';
 import ChatWindow from '../components/ChatWindow';
 import MessageInput from '../components/MessageInput';
@@ -17,6 +17,8 @@ function ChatPage() {
   const { language, t } = useLanguage();
   const [loading, setLoading] = useState(false);
   const [messages, setMessages] = useState([]);
+  /* FIX - useRef for latest messages */
+  const messagesRef = useRef([]);
   const [isTyping, setIsTyping] = useState(false);
   const [typingStatus, setTypingStatus] = useState('');
   const [isCompact, setIsCompact] = useState(false);
@@ -26,6 +28,17 @@ function ChatPage() {
   const [selectedModel, setSelectedModel] = useState('cortex-fast');
   const [focusMode, setFocusMode] = useState(false);
   const [imageMode, setImageMode] = useState(false);
+  /* FIX - separate error state */
+  const [errorMsg, setErrorMsg] = useState(null);
+
+  /* FIX - useRef for latest messages */
+  const updateMessages = (updater) => {
+    setMessages(prev => {
+      const next = typeof updater === 'function' ? updater(prev) : updater;
+      messagesRef.current = next;
+      return next;
+    });
+  };
 
   const needsWebSearch = (text) => {
     const keywords = ['latest', 'today', 'current', 'news', '2024', '2025', '2026', 'who is', 'what happened', 'what is new', 'recent', 'update', 'breaking'];
@@ -66,7 +79,12 @@ function ChatPage() {
 
   const handleSendMessage = async (questionText, modelOverride) => {
     if (!questionText.trim()) return;
+    /* FIX - clean user message on error */
+    if (loading) return;
     const model = modelOverride || selectedModel;
+
+    /* FIX - separate error state */
+    setErrorMsg(null);
 
     const userMessage = {
       id: Date.now(),
@@ -85,7 +103,7 @@ function ChatPage() {
         model: 'image',
         streaming: true,
       };
-      setMessages(prev => [...prev, userMessage, botMessage]);
+      updateMessages(prev => [...prev, userMessage, botMessage]);
       setLoading(true);
       setIsTyping(true);
       setTypingStatus(language === 'ar' ? 'جارٍ توليد الصورة...' : 'Generating image...');
@@ -93,7 +111,7 @@ function ChatPage() {
       try {
         const encoded = encodeURIComponent(questionText);
         const imageUrl = `https://image.pollinations.ai/prompt/${encoded}`;
-        setMessages(prev =>
+        updateMessages(prev =>
           prev.map(m =>
             m.id === botMessage.id
               ? { ...m, text: imageUrl, streaming: false, isImage: true }
@@ -101,7 +119,7 @@ function ChatPage() {
           )
         );
       } catch {
-        setMessages(prev =>
+        updateMessages(prev =>
           prev.map(m =>
             m.id === botMessage.id
               ? { ...m, text: language === 'ar' ? 'فشل توليد الصورة' : 'Image generation failed', streaming: false, error: true }
@@ -125,7 +143,7 @@ function ChatPage() {
       streaming: true,
     };
 
-    setMessages(prev => [...prev, userMessage, botMessage]);
+    updateMessages(prev => [...prev, userMessage, botMessage]);
     setLoading(true);
     setIsTyping(true);
     setTypingStatus(t.analyzing || '');
@@ -150,27 +168,52 @@ function ChatPage() {
       setTypingStatus(t.analyzing || '');
     }
 
-    const chatMessages = [...messages, userMessage].map(m => ({
-      role: m.type === 'user' ? 'user' : 'assistant',
-      content: m.text,
-    }));
+    /* FIX - sanitize consecutive roles */
+    function sanitizeMessages(msgs) {
+      const result = [];
+      for (const msg of msgs) {
+        if (result.length > 0 && result[result.length - 1].role === msg.role) {
+          continue;
+        }
+        result.push(msg);
+      }
+      return result;
+    }
 
+    /* FIX - message order */
+    const baseMessages = [...messagesRef.current, userMessage];
+    const apiMessages = baseMessages
+      .map(m => ({
+        role: m.type === 'user' ? 'user' : 'assistant',
+        content: m.text,
+      }))
+      .filter(msg =>
+        !(msg.role === 'assistant' && 
+          (msg.content?.includes('providers failed') || 
+           msg.content?.trim() === ''))
+      );  /* FIX - remove empty assistant */
+
+    const chatMessages = sanitizeMessages(apiMessages);
+
+    /* FIX - message order */
+    let withSystem = chatMessages;
     if (webSearchContext) {
       const snippets = webSearchContext.map(r => r.content).filter(Boolean).join('\n');
-      chatMessages.push({
-        role: 'system',
-        content: `Here is recent web data: ${snippets}. Use it to answer the user's question.`,
-      });
+      const systemPrompt = `Here is recent web data: ${snippets}. Use it to answer the user's question.`;
+      withSystem = [
+        { role: 'system', content: systemPrompt },
+        ...chatMessages
+      ];
     }
 
     await sendMessage({
-      messages: chatMessages,
+      messages: withSystem,
       model,
       language,
       onToken: (token) => {
         setIsTyping(false);
         setTypingStatus('');
-        setMessages(prev =>
+        updateMessages(prev =>
           prev.map(m =>
             m.id === botMessageId
               ? { ...m, text: m.text + token, streaming: true }
@@ -179,7 +222,7 @@ function ChatPage() {
         );
       },
       onDone: () => {
-        setMessages(prev => {
+        updateMessages(prev => {
           let updated = prev.map(m =>
             m.id === botMessageId
               ? { ...m, streaming: false, webSources: webSearchContext || undefined }
@@ -191,19 +234,12 @@ function ChatPage() {
         setIsTyping(false);
         setTypingStatus('');
       },
-      onError: (errorMsg) => {
-        setMessages(prev =>
-          prev.map(m =>
-            m.id === botMessageId
-              ? {
-                  ...m,
-                  text: errorMsg || t.errorMessage,
-                  streaming: false,
-                  error: true,
-                }
-              : m
-          )
-        );
+      onError: (errText) => {
+        /* FIX - clean user message on error */
+        updateMessages(prev => prev.filter(
+          m => m.id !== botMessageId && m.id !== userMessage.id
+        ));
+        setErrorMsg(errText || t.errorMessage);
         setLoading(false);
         setIsTyping(false);
         setTypingStatus('');
@@ -212,12 +248,12 @@ function ChatPage() {
   };
 
   const handleNewChat = () => {
-    if (messages.length > 0) {
+    if (messagesRef.current.length > 0) {
       const chatId = currentChatId || `chat-${Date.now()}`;
-      saveChat(messages, chatId);
+      saveChat(messagesRef.current, chatId);
     }
     setCurrentChatId(`chat-${Date.now()}`);
-    setMessages([]);
+    updateMessages([]);
     if (window.innerWidth < 768) {
       setIsSidebarOpen(false);
     }
@@ -229,20 +265,20 @@ function ChatPage() {
 
   const handleRegenerateResponse = (messageIndex) => {
     const userMessageIndex = messageIndex - 1;
-    if (userMessageIndex >= 0 && messages[userMessageIndex]?.type === 'user') {
-      const userQuestion = messages[userMessageIndex].text;
-      const prevModel = messages[messageIndex]?.model || selectedModel;
-      setMessages(prev => prev.slice(0, messageIndex));
+    if (userMessageIndex >= 0 && messagesRef.current[userMessageIndex]?.type === 'user') {
+      const userQuestion = messagesRef.current[userMessageIndex].text;
+      const prevModel = messagesRef.current[messageIndex]?.model || selectedModel;
+      updateMessages(prev => prev.slice(0, messageIndex));
       handleSendMessage(userQuestion, prevModel);
     }
   };
 
   const handleClearChat = () => {
-    if (messages.length > 0) {
+    if (messagesRef.current.length > 0) {
       const chatId = currentChatId || Date.now();
-      saveChat(messages, chatId);
+      saveChat(messagesRef.current, chatId);
     }
-    setMessages([]);
+    updateMessages([]);
     setCurrentChatId(Date.now());
   };
 
@@ -281,13 +317,20 @@ function ChatPage() {
     }
   }, [focusMode]);
 
+  /* FIX - separate error state */
+  useEffect(() => {
+    if (!errorMsg) return;
+    const timer = setTimeout(() => setErrorMsg(null), 5000);
+    return () => clearTimeout(timer);
+  }, [errorMsg]);
+
   const handleLoadChat = (chat) => {
-    if (messages.length > 0 && currentChatId && currentChatId !== chat.id) {
-      saveChat(messages, currentChatId);
+    if (messagesRef.current.length > 0 && currentChatId && currentChatId !== chat.id) {
+      saveChat(messagesRef.current, currentChatId);
     }
     const loadedMessages = loadChat(chat.id);
     if (loadedMessages) {
-      setMessages(loadedMessages);
+      updateMessages(loadedMessages);
       setCurrentChatId(chat.id);
       if (window.innerWidth < 768) {
         setIsSidebarOpen(false);
@@ -298,7 +341,7 @@ function ChatPage() {
   const handleDeleteChat = (chatId) => {
     deleteChat(chatId);
     if (chatId === currentChatId) {
-      setMessages([]);
+      updateMessages([]);
       setCurrentChatId(Date.now());
     }
   };
@@ -347,6 +390,19 @@ function ChatPage() {
             onSelectSuggestion={handleSelectSuggestion}
             onRegenerateResponse={handleRegenerateResponse}
           />
+          {/* FIX - separate error state */}
+          {errorMsg && (
+            <div className="temp-error-banner" role="alert">
+              <span>{errorMsg}</span>
+              <button
+                className="temp-error-dismiss"
+                onClick={() => setErrorMsg(null)}
+                aria-label="Dismiss"
+              >
+                ✕
+              </button>
+            </div>
+          )}
         </div>
 
         <MessageInput

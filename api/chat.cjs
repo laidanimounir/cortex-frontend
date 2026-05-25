@@ -7,14 +7,14 @@ const MODEL_MAP = {
   'cortex-think': 'deepseek-r1-distill-llama-70b',
 };
 
-/* FIX 1 - History Trimming */
-function trimMessages(messages, maxMessages = 10, maxCharsPerMessage = 2000) {
+/* FIX 1 - slice from start */
+function trimMessages(messages, maxMessages = 10, maxCharsPerMessage = 6000) {
   const trimmed = messages.slice(-maxMessages);
   return trimmed.map(msg => ({
     ...msg,
     content: typeof msg.content === 'string'
       && msg.content.length > maxCharsPerMessage
-        ? msg.content.slice(-maxCharsPerMessage) + '\n[...truncated]'
+        ? msg.content.slice(0, maxCharsPerMessage) + '\n[...truncated]'
         : msg.content
   }));
 }
@@ -53,10 +53,14 @@ module.exports = async (req, res) => {
 
   const selectedModel = MODEL_MAP[model] || MODEL_MAP['cortex-fast'];
 
+  /* FIX 2 - filter double system */
+  const filteredMessages = trimMessages(
+    messages.filter(m => m.role !== 'system')
+  );
+
   const fullMessages = [
     { role: 'system', content: SYSTEM_PROMPT },
-    /* FIX 1 - History Trimming */
-    ...trimMessages(messages),
+    ...filteredMessages,
   ];
 
   if (model === 'cortex-vision') {
@@ -168,10 +172,18 @@ module.exports = async (req, res) => {
         message: fallbackError.message,
         stack: fallbackError.stack,
       });
-      res.status(502).json({
-        error: 'All providers failed',
-        reason: fallbackError.message,
-      });
+      /* FIX 3 - headers guard */
+      if (!res.headersSent) {
+        res.status(502).json({
+          error: 'All providers failed',
+          reason: fallbackError.message,
+        });
+      } else {
+        res.write(`data: ${JSON.stringify({ 
+          error: 'All providers failed' 
+        })}\n\n`);
+        res.end();
+      }
     }
   }
 };
