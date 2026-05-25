@@ -29,8 +29,9 @@ function SplashScreen() {
   useEffect(() => {
     const msgs = welcomeMessages[language] || welcomeMessages.en;
     setWelcomeText(msgs[Math.floor(Math.random() * msgs.length)]);
-    setTimeout(() => setShowContent(true), 100);
-  }, []);
+    const timer = setTimeout(() => setShowContent(true), 100);
+    return () => clearTimeout(timer);
+  }, [language]);
 
   const handleLanguageChange = (lang) => {
     setLanguage(lang);
