@@ -118,12 +118,6 @@ function Header({ language, onLanguageChange, onClearChat, onToggleCompact, isCo
                         >
                             {t.languageEn}
                         </button>
-                        <button
-                            className={`lang-btn ${language === 'de' ? 'active' : ''}`}
-                            onClick={() => onLanguageChange('de')}
-                        >
-                            {t.languageDe}
-                        </button>
                     </div>
 
                   

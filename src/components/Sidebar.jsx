@@ -133,10 +133,10 @@ function Sidebar({ language, isOpen, onClose, onNewChat, chatHistory, onLoadChat
                 <div className="sidebar-content">
                     {chatHistory && chatHistory.length > 0 ? (
                         <div className="history-list">
-                            {renderHistoryGroup(language === 'ar' ? 'اليوم' : (language === 'de' ? 'Heute' : 'Today'), groupedHistory.today)}
-                            {renderHistoryGroup(language === 'ar' ? 'أمس' : (language === 'de' ? 'Gestern' : 'Yesterday'), groupedHistory.yesterday)}
-                            {renderHistoryGroup(language === 'ar' ? 'السابقة 7 أيام' : (language === 'de' ? 'Vorherige 7 Tage' : 'Previous 7 Days'), groupedHistory.previous7Days)}
-                            {renderHistoryGroup(language === 'ar' ? 'أقدم' : (language === 'de' ? 'Älter' : 'Older'), groupedHistory.older)}
+                            {renderHistoryGroup(language === 'ar' ? 'اليوم' : 'Today', groupedHistory.today)}
+                            {renderHistoryGroup(language === 'ar' ? 'أمس' : 'Yesterday', groupedHistory.yesterday)}
+                            {renderHistoryGroup(language === 'ar' ? 'السابقة 7 أيام' : 'Previous 7 Days', groupedHistory.previous7Days)}
+                            {renderHistoryGroup(language === 'ar' ? 'أقدم' : 'Older', groupedHistory.older)}
                         </div>
                     ) : (
                         <div className="empty-history">
