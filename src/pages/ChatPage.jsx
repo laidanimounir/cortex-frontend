@@ -8,6 +8,7 @@ import ShortcutsModal from '../components/ShortcutsModal';
 import { translations } from '../utils/translations';
 import useKeyboardShortcuts from '../hooks/useKeyboardShortcuts';
 import useChatHistory from '../hooks/useChatHistory';
+import { sendMessage } from '../services/chat';
 import '../App.css';
 
 function ChatPage() {
@@ -20,9 +21,9 @@ function ChatPage() {
   const [showShortcuts, setShowShortcuts] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(window.innerWidth >= 768);
   const [currentChatId, setCurrentChatId] = useState(null);
-  
-  const { chatHistory, saveChat, loadChat, deleteChat, renameChat } = useChatHistory();
+  const [selectedModel, setSelectedModel] = useState('cortex-fast');
 
+  const { chatHistory, saveChat, loadChat, deleteChat, renameChat } = useChatHistory();
 
   useEffect(() => {
     const savedLang = localStorage.getItem('selectedLanguage') || 'en';
@@ -50,90 +51,94 @@ function ChatPage() {
     document.documentElement.lang = newLanguage;
   };
 
-  const handleSendMessage = async (questionText) => {
+  const handleSendMessage = async (questionText, modelOverride) => {
     if (!questionText.trim()) return;
+    const model = modelOverride || selectedModel;
 
     const userMessage = {
       id: Date.now(),
       type: 'user',
       text: questionText,
       metadata: null,
-      isDeepThink: false,
+      model: null,
     };
 
-    setMessages(prev => [...prev, userMessage]);
+    const botMessageId = Date.now() + 1;
+    const botMessage = {
+      id: botMessageId,
+      type: 'bot',
+      text: '',
+      metadata: null,
+      model: model,
+      streaming: true,
+    };
+
+    setMessages(prev => [...prev, userMessage, botMessage]);
     setLoading(true);
     setIsTyping(true);
     setTypingStatus(translations[language].analyzing || '');
 
-    try {
-      const botMessage = {
-        id: Date.now() + 1,
-        type: 'bot',
-        text: 'Thinking...',
-        metadata: null,
-        isDeepThink: false,
-      };
-      setMessages(prev => [...prev, botMessage]);
-    } catch (error) {
-      const errorMessage = {
-        id: Date.now() + 1,
-        type: 'bot',
-        text: (translations[language] || translations['en']).errorMessage,
-        metadata: null,
-        isDeepThink: false,
-        error: true,
-      };
-      setMessages(prev => [...prev, errorMessage]);
-    } finally {
-      setLoading(false);
-      setIsTyping(false);
-      setTypingStatus('');
-    }
+    const chatMessages = [...messages, userMessage].map(m => ({
+      role: m.type === 'user' ? 'user' : 'assistant',
+      content: m.text,
+    }));
+
+    await sendMessage({
+      messages: chatMessages,
+      model,
+      language,
+      onToken: (token) => {
+        setIsTyping(false);
+        setTypingStatus('');
+        setMessages(prev =>
+          prev.map(m =>
+            m.id === botMessageId
+              ? { ...m, text: m.text + token, streaming: true }
+              : m
+          )
+        );
+      },
+      onDone: () => {
+        setMessages(prev =>
+          prev.map(m =>
+            m.id === botMessageId
+              ? { ...m, streaming: false }
+              : m
+          )
+        );
+        setLoading(false);
+        setIsTyping(false);
+        setTypingStatus('');
+      },
+      onError: (errorMsg) => {
+        setMessages(prev =>
+          prev.map(m =>
+            m.id === botMessageId
+              ? {
+                  ...m,
+                  text: errorMsg || (translations[language] || translations['en']).errorMessage,
+                  streaming: false,
+                  error: true,
+                }
+              : m
+          )
+        );
+        setLoading(false);
+        setIsTyping(false);
+        setTypingStatus('');
+      },
+    });
   };
 
-  const handleNewChat = async () => {
+  const handleNewChat = () => {
     if (messages.length > 0) {
       const chatId = currentChatId || `chat-${Date.now()}`;
       saveChat(messages, chatId);
     }
-    
-    const newChatId = `chat-${Date.now()}`;
-    setCurrentChatId(newChatId);
+    setCurrentChatId(`chat-${Date.now()}`);
     setMessages([]);
-    
     if (window.innerWidth < 768) {
       setIsSidebarOpen(false);
-    }
-  };
-
-  const handleDeepThink = async (questionText) => {
-    const t = translations[language] || translations['en'];
-
-    const userMessage = { type: 'user', text: questionText, metadata: null, isDeepThink: true };
-    setMessages(prev => [...prev, userMessage]);
-    setIsTyping(true);
-    setTypingStatus(t.deepThinking);
-
-    try {
-      const botMessage = {
-        type: 'bot',
-        text: 'Thinking...',
-        metadata: null,
-        isDeepThink: true
-      };
-      setMessages(prev => [...prev, botMessage]);
-    } catch (error) {
-      const errorMessage = {
-        type: 'bot',
-        text: `Deep Think Error: ${error.message}`,
-        metadata: null,
-        isDeepThink: true
-      };
-      setMessages(prev => [...prev, errorMessage]);
-    } finally {
-      setIsTyping(false);
-      setTypingStatus('');
     }
   };
 
@@ -141,17 +146,13 @@ function ChatPage() {
     handleSendMessage(question);
   };
 
-  const handleRegenerateResponse = async (messageIndex) => {
+  const handleRegenerateResponse = (messageIndex) => {
     const userMessageIndex = messageIndex - 1;
     if (userMessageIndex >= 0 && messages[userMessageIndex]?.type === 'user') {
       const userQuestion = messages[userMessageIndex].text;
-      const wasDeepThink = messages[messageIndex]?.isDeepThink;
+      const prevModel = messages[messageIndex]?.model || selectedModel;
       setMessages(prev => prev.slice(0, messageIndex));
-      if (wasDeepThink) {
-        await handleDeepThink(userQuestion);
-      } else {
-        await handleSendMessage(userQuestion);
-      }
+      handleSendMessage(userQuestion, prevModel);
     }
   };
 
@@ -172,7 +173,7 @@ function ChatPage() {
   useKeyboardShortcuts({
     onClearChat: handleClearChat,
     onShowShortcuts: () => setShowShortcuts(true),
-    onToggleSidebar: handleToggleSidebar
+    onToggleSidebar: handleToggleSidebar,
   });
 
   useEffect(() => {
@@ -187,12 +188,10 @@ function ChatPage() {
     if (messages.length > 0 && currentChatId && currentChatId !== chat.id) {
       saveChat(messages, currentChatId);
     }
-    
     const loadedMessages = loadChat(chat.id);
     if (loadedMessages) {
       setMessages(loadedMessages);
       setCurrentChatId(chat.id);
-      
       if (window.innerWidth < 768) {
         setIsSidebarOpen(false);
       }
@@ -201,7 +200,6 @@ function ChatPage() {
 
   const handleDeleteChat = (chatId) => {
     deleteChat(chatId);
-    
     if (chatId === currentChatId) {
       setMessages([]);
       setCurrentChatId(Date.now());
@@ -215,13 +213,13 @@ function ChatPage() {
   return (
     <div className="app-container">
       {isSidebarOpen && (
-        <div 
-          className="mobile-overlay" 
+        <div
+          className="mobile-overlay"
           onClick={() => setIsSidebarOpen(false)}
         />
       )}
 
-      <Sidebar 
+      <Sidebar
         language={language}
         isOpen={isSidebarOpen}
         onClose={() => setIsSidebarOpen(false)}
@@ -234,16 +232,15 @@ function ChatPage() {
       />
 
       <div className="main-content">
-      <Header
-  language={language}
-  onLanguageChange={handleLanguageChange}
-  onToggleSidebar={handleToggleSidebar}
-  onClearChat={handleClearChat}
-  onToggleCompact={handleToggleCompact}
-  isCompact={isCompact}
-  messages={messages}
-/>
-
+        <Header
+          language={language}
+          onLanguageChange={handleLanguageChange}
+          onToggleSidebar={handleToggleSidebar}
+          onClearChat={handleClearChat}
+          onToggleCompact={handleToggleCompact}
+          isCompact={isCompact}
+          messages={messages}
+        />
 
         <div className="chat-area">
           <ChatWindow
@@ -258,16 +255,17 @@ function ChatPage() {
 
         <MessageInput
           onSendMessage={handleSendMessage}
-          onDeepThink={handleDeepThink}
           language={language}
           disabled={loading}
+          selectedModel={selectedModel}
+          onModelChange={setSelectedModel}
         />
 
         <Footer language={language} />
       </div>
 
       {showShortcuts && (
-        <ShortcutsModal 
+        <ShortcutsModal
           language={language}
           onClose={() => setShowShortcuts(false)}
         />
