@@ -41,11 +41,8 @@ function useChatHistory() {
             // ✅ تحديث المحادثة الموجودة
             updatedHistory = [...chatHistory];
             updatedHistory[existingChatIndex] = newChat;
-            console.log('📝 Updated existing chat:', finalChatId);
         } else {
-            // ✅ إضافة محادثة جديدة
             updatedHistory = [newChat, ...chatHistory].slice(0, MAX_HISTORY);
-            console.log('➕ Added new chat:', finalChatId);
         }
 
         setChatHistory(updatedHistory);
@@ -69,7 +66,6 @@ function useChatHistory() {
         setChatHistory(updated);
         try {
             localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
-            console.log('🗑️ Deleted chat:', chatId);
         } catch (error) {
             console.error('Error deleting chat:', error);
         }
@@ -94,7 +90,6 @@ function useChatHistory() {
         setChatHistory([]);
         try {
             localStorage.removeItem(STORAGE_KEY);
-            console.log('🧹 Cleared all history');
         } catch (error) {
             console.error('Error clearing history:', error);
         }

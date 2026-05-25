@@ -50,7 +50,6 @@ function ChatPage() {
       try {
         const data = await getStats();
         setStats(data);
-        console.log('System stats:', data);
       } catch (error) {
         console.error('Failed to load stats:', error);
       }
