@@ -138,6 +138,9 @@ function SplashScreen() {
             </button>
           </div>
 
+          {/* SPLIT LAYOUT - vertical divider */}
+          <div className="splash-vertical-divider" />
+
           {/* SPLIT LAYOUT - right column: logo + glow */}
           <div className="splash-right">
             {/* SPLIT LAYOUT - floating decorative circles */}
