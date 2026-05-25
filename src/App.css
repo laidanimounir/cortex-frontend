@@ -298,6 +298,19 @@ body.compact-mode .app-header {
   color: #DC2626;
 }
 
+.history-rename-input {
+  flex: 1;
+  background: var(--bg-input);
+  border: 1px solid var(--accent-primary);
+  border-radius: 4px;
+  color: var(--text-primary);
+  font-size: 0.9rem;
+  padding: 0.3rem 0.5rem;
+  outline: none;
+  font-family: inherit;
+  min-width: 0;
+}
+
 .sidebar-footer {
   padding: 1rem;
   border-top: 1px solid var(--border-color);

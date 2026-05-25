@@ -1,7 +1,9 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { translations } from '../utils/translations';
 
-function Sidebar({ language, isOpen, onClose, onNewChat, chatHistory, onLoadChat, onDeleteChat, activeChatId }) {
+function Sidebar({ language, isOpen, onClose, onNewChat, chatHistory, onLoadChat, onDeleteChat, onRenameChat, activeChatId }) {
+    const [editingId, setEditingId] = useState(null);
+    const [editTitle, setEditTitle] = useState('');
     const t = translations[language] || translations['en'];
 
 
@@ -52,9 +54,38 @@ function Sidebar({ language, isOpen, onClose, onNewChat, chatHistory, onLoadChat
                             onClick={() => onLoadChat(chat)}
                             title={chat.title || chat.messages?.[0]?.text}
                         >
-                            <span className="history-text">
-                                {chat.title || chat.messages?.[0]?.text?.substring(0, 30) || 'Conversation'}
-                            </span>
+                            {editingId === chat.id ? (
+                                <input
+                                    className="history-rename-input"
+                                    value={editTitle}
+                                    onChange={(e) => setEditTitle(e.target.value)}
+                                    onBlur={() => {
+                                        if (editTitle.trim()) {
+                                            onRenameChat(chat.id, editTitle.trim());
+                                        }
+                                        setEditingId(null);
+                                    }}
+                                    onKeyDown={(e) => {
+                                        if (e.key === 'Enter') {
+                                            e.target.blur();
+                                        } else if (e.key === 'Escape') {
+                                            setEditingId(null);
+                                        }
+                                    }}
+                                    autoFocus
+                                    onClick={(e) => e.stopPropagation()}
+                                />
+                            ) : (
+                                <span
+                                    className="history-text"
+                                    onDoubleClick={() => {
+                                        setEditingId(chat.id);
+                                        setEditTitle(chat.title || '');
+                                    }}
+                                >
+                                    {chat.title || chat.messages?.[0]?.text?.substring(0, 30) || 'Conversation'}
+                                </span>
+                            )}
                         </button>
                         <button
                             className="delete-chat-btn"

@@ -75,6 +75,20 @@ function useChatHistory() {
         }
     };
 
+    // Rename a chat
+    const renameChat = (chatId, newTitle) => {
+        if (!chatId || !newTitle) return;
+        const updated = chatHistory.map(c =>
+            c.id === chatId ? { ...c, title: newTitle, preview: newTitle } : c
+        );
+        setChatHistory(updated);
+        try {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+        } catch (error) {
+            console.error('Error renaming chat:', error);
+        }
+    };
+
     // Clear all history
     const clearHistory = () => {
         setChatHistory([]);
@@ -91,6 +105,7 @@ function useChatHistory() {
         saveChat,
         loadChat,
         deleteChat,
+        renameChat,
         clearHistory
     };
 }
