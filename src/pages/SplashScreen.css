@@ -1,6 +1,13 @@
 /* FIX 8 - font-display swap */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap');
 
+/* FIX 2 - Color restore: CSS variables */
+:root {
+  --color-primary: #7C3AED;
+  --color-secondary: #06B6D4;
+  --gradient-main: linear-gradient(135deg, #7C3AED, #06B6D4);
+}
+
 /* ─── Container ─── */
 .splash-container {
   width: 100vw;
@@ -115,14 +122,15 @@
 .splash-content {
   display: flex;
   flex-direction: row;
-  align-items: center;
+  align-items: stretch;
   width: 100%;
-  height: 100%;
+  height: 100vh;
   position: relative;
   z-index: 1;
 }
 
 /* ─── LEFT COLUMN: text ─── */
+/* FIX 1 - Vertical centering */
 .splash-left {
   width: 50%;
   height: 100vh;
@@ -130,6 +138,8 @@
   flex-direction: column;
   justify-content: center;
   padding-left: 8vw;
+  padding-top: 0;
+  margin-top: 0;
   text-align: left;
   gap: 0.5rem;
 }
@@ -178,8 +188,9 @@
   width: 50%;
   height: 100%;
   display: flex;
-  align-items: center;
+  flex-direction: column;
   justify-content: center;
+  align-items: center;
   position: relative;
   overflow: hidden;
 }
@@ -253,22 +264,24 @@
   justify-content: center;
 }
 
+/* FIX 2 - Color restore */
 /* SPLIT LAYOUT - outer glow ring */
 .splash-logo-glow-outer {
   position: absolute;
   width: 540px;
   height: 540px;
   border-radius: 50%;
-  background: rgba(124, 58, 237, 0.06);
+  background: radial-gradient(circle, rgba(124,58,237,0.1) 0%, transparent 60%);
   filter: blur(40px);
 }
 
+/* FIX 2 - Color restore */
 .splash-logo-glow {
   position: absolute;
   width: 460px;
   height: 460px;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(139, 92, 246, 0.25) 0%, rgba(6, 182, 212, 0.12) 40%, transparent 72%);
+  background: radial-gradient(circle, rgba(124,58,237,0.35) 0%, rgba(6,182,212,0.15) 50%, transparent 70%);
   animation: splashPulse 3.5s ease-in-out infinite;
   will-change: transform, opacity;
 }
@@ -303,13 +316,14 @@
   z-index: 1;
 }
 
+/* FIX 2 - Color restore */
 /* ─── Title ─── */
 .splash-title {
   font-size: 5rem;
   font-weight: 800;
   font-family: 'Inter', sans-serif;
-  color: #A78BFA;
-  background: linear-gradient(135deg, #A78BFA 0%, #22D3EE 60%, #2DD4BF 100%);
+  color: #7C3AED;
+  background: linear-gradient(135deg, #7C3AED, #06B6D4);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -331,13 +345,15 @@
   animation: splashEnter 0.4s ease-out 0.4s both;
 }
 
+/* FIX 1 - Vertical centering */
 /* SPLIT LAYOUT - horizontal divider */
 .splash-divider {
   width: 60px;
   height: 2px;
   background: linear-gradient(90deg, #7C3AED, #06B6D4);
-  margin: 1.5rem 0;
+  margin: 0 0 1.5rem;
   border-radius: 1px;
+  border: none;
   opacity: 0;
   animation: splashDividerIn 0.4s ease-out 0.6s both;
 }
@@ -358,6 +374,7 @@
   animation: splashEnter 0.4s ease-out 0.7s both;
 }
 
+/* FIX 1 - Vertical centering */
 /* ─── CTA Button ─── */
 .splash-cta {
   display: flex;
@@ -367,14 +384,14 @@
   width: 280px;
   padding: 1rem 0;
   background: linear-gradient(135deg, #7C3AED, #06B6D4);
-  color: #fff;
+  color: #ffffff;
   border: none;
   border-radius: 14px;
   font-size: 1.05rem;
   font-weight: 600;
   cursor: pointer;
   transition: transform 0.35s ease, box-shadow 0.35s ease;
-  margin-top: 0.5rem;
+  margin-top: 0;
   font-family: inherit;
   opacity: 0;
   animation: splashBtnEnter 0.4s ease-out 0.9s both;
