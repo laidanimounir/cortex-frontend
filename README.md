@@ -88,6 +88,9 @@ VITE_EMAILJS_PUBLIC_KEY=your_emailjs_public_key
 ### Run Development Server
 
 ```bash
+
+API dev server running on http://localhost:3001
+ npm run dev:server
 npm run dev
 ```
 
