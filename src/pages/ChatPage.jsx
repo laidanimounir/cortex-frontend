@@ -9,11 +9,9 @@ import { translations } from '../utils/translations';
 import useKeyboardShortcuts from '../hooks/useKeyboardShortcuts';
 import useChatHistory from '../hooks/useChatHistory';
 import '../App.css';
-import { askQuestion, createNewSession, clearSession, getStats } from '../services/api';
 
 function ChatPage() {
   const [loading, setLoading] = useState(false);
-  const [stats, setStats] = useState(null);
   const [language, setLanguage] = useState('en');
   const [messages, setMessages] = useState([]);
   const [isTyping, setIsTyping] = useState(false);
@@ -45,18 +43,6 @@ function ChatPage() {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  useEffect(() => {
-    async function loadStats() {
-      try {
-        const data = await getStats();
-        setStats(data);
-      } catch (error) {
-        console.error('Failed to load stats:', error);
-      }
-    }
-    loadStats();
-  }, []);
-
   const handleLanguageChange = (newLanguage) => {
     setLanguage(newLanguage);
     localStorage.setItem('selectedLanguage', newLanguage);
@@ -81,22 +67,15 @@ function ChatPage() {
     setTypingStatus(translations[language].analyzing || '');
 
     try {
-      const response = await askQuestion(questionText);
       const botMessage = {
         id: Date.now() + 1,
         type: 'bot',
-        text: response.answer || 'No answer received.',
-        metadata: {
-          confidence: response.confidence,
-          source: response.source,
-          engine: response.engine,
-          hasContext: response.has_context,
-        },
+        text: 'Thinking...',
+        metadata: null,
         isDeepThink: false,
       };
       setMessages(prev => [...prev, botMessage]);
     } catch (error) {
-      console.error('Error sending message:', error);
       const errorMessage = {
         id: Date.now() + 1,
         type: 'bot',
@@ -123,18 +102,8 @@ function ChatPage() {
     setCurrentChatId(newChatId);
     setMessages([]);
     
-    try {
-      await clearSession();
-      await createNewSession();
-      
-      if (window.innerWidth < 768) {
-        setIsSidebarOpen(false);
-      }
-    } catch (error) {
-      console.error('Error starting new chat:', error);
-      if (window.innerWidth < 768) {
-        setIsSidebarOpen(false);
-      }
+    if (window.innerWidth < 768) {
+      setIsSidebarOpen(false);
     }
   };
 
@@ -147,11 +116,10 @@ function ChatPage() {
     setTypingStatus(t.deepThinking);
 
     try {
-      const response = await askQuestion(questionText);
       const botMessage = {
         type: 'bot',
-        text: response.answer || 'No answer received.',
-        metadata: { confidence: response.confidence, question: response.question },
+        text: 'Thinking...',
+        metadata: null,
         isDeepThink: true
       };
       setMessages(prev => [...prev, botMessage]);
