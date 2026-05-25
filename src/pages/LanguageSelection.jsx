@@ -1,6 +1,5 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import './LanguageSelection.css';
 
 function LanguageSelection() {
 const navigate = useNavigate();
