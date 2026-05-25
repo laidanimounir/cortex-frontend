@@ -3,17 +3,11 @@ import ReactMarkdown from 'react-markdown';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import remarkGfm from 'remark-gfm';
-import { translations } from '../utils/translations';
+import { useLanguage } from '../contexts/LanguageContext';
 import SuggestedQuestions from './SuggestedQuestions';
 
-const MODEL_LABELS = {
-  'cortex-fast': { en: 'Fast', ar: 'سريع' },
-  'cortex-think': { en: 'Think', ar: 'تفكير' },
-  'cortex-vision': { en: 'Vision', ar: 'رؤية' },
-};
-
-function ChatWindow({ messages, language, isTyping, typingStatus, onSelectSuggestion, onRegenerateResponse }) {
-  const t = translations[language] || translations['en'];
+function ChatWindow({ messages, isTyping, typingStatus, onSelectSuggestion, onRegenerateResponse }) {
+    const { language, t } = useLanguage();
   const messagesEndRef = useRef(null);
   const [copiedIndex, setCopiedIndex] = useState(null);
 
@@ -57,7 +51,7 @@ function ChatWindow({ messages, language, isTyping, typingStatus, onSelectSugges
     <div className="chat-window">
       <div className="messages-container">
         {messages.length === 0 && (
-          <SuggestedQuestions language={language} onSelectSuggestion={onSelectSuggestion} />
+          <SuggestedQuestions onSelectSuggestion={onSelectSuggestion} />
         )}
 
         {messages.map((msg, index) => (

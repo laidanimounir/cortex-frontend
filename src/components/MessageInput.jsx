@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { translations } from '../utils/translations';
+import { useLanguage } from '../contexts/LanguageContext';
 
 const MODEL_OPTIONS = [
   { id: 'cortex-fast', labelKey: 'modelFast', descKey: 'modelFastDesc', icon: '⚡' },
@@ -7,8 +7,8 @@ const MODEL_OPTIONS = [
   { id: 'cortex-vision', labelKey: 'modelVision', descKey: 'modelVisionDesc', icon: '🎯' },
 ];
 
-function MessageInput({ language, onSendMessage, disabled, selectedModel, onModelChange }) {
-  const t = translations[language] || translations['en'];
+function MessageInput({ onSendMessage, disabled, selectedModel, onModelChange }) {
+  const { t } = useLanguage();
 
   const [input, setInput] = useState('');
   const [showModelMenu, setShowModelMenu] = useState(false);

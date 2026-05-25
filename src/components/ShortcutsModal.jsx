@@ -1,12 +1,9 @@
 import React from 'react';
-import { translations } from '../utils/translations';
+import { useLanguage } from '../contexts/LanguageContext';
 
-function ShortcutsModal({ isOpen, onClose, language }) {
+function ShortcutsModal({ isOpen, onClose }) {
+  const { t } = useLanguage();
   if (!isOpen) return null;
-
-  // ضمان وجود اللغة لتجنب الخطأ
-  const currentLang = language || 'en'; 
-  const t = translations[currentLang] || translations['en'];
 
   return (
     <div className="modal-overlay" onClick={onClose}>

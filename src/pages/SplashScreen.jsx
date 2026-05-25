@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useLanguage } from '../contexts/LanguageContext';
 import './SplashScreen.css';
 
 const welcomeMessages = {
@@ -21,27 +22,18 @@ const welcomeMessages = {
 
 function SplashScreen() {
   const navigate = useNavigate();
-  const [language, setLanguage] = useState('en');
+  const { language, setLanguage } = useLanguage();
   const [welcomeText, setWelcomeText] = useState('');
   const [showContent, setShowContent] = useState(false);
 
   useEffect(() => {
-    const savedLang = localStorage.getItem('selectedLanguage') || 'en';
-    setLanguage(savedLang);
-    document.documentElement.dir = savedLang === 'ar' ? 'rtl' : 'ltr';
-    document.documentElement.lang = savedLang;
-
-    const msgs = welcomeMessages[savedLang] || welcomeMessages.en;
+    const msgs = welcomeMessages[language] || welcomeMessages.en;
     setWelcomeText(msgs[Math.floor(Math.random() * msgs.length)]);
-
     setTimeout(() => setShowContent(true), 100);
   }, []);
 
   const handleLanguageChange = (lang) => {
     setLanguage(lang);
-    localStorage.setItem('selectedLanguage', lang);
-    document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
-    document.documentElement.lang = lang;
     const msgs = welcomeMessages[lang] || welcomeMessages.en;
     setWelcomeText(msgs[Math.floor(Math.random() * msgs.length)]);
   };

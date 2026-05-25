@@ -5,15 +5,17 @@ import MessageInput from '../components/MessageInput';
 import Footer from '../components/Footer';
 import Sidebar from '../components/Sidebar';
 import ShortcutsModal from '../components/ShortcutsModal';
-import { translations } from '../utils/translations';
+import { useLanguage } from '../contexts/LanguageContext';
+import { useToast } from '../contexts/ToastContext';
 import useKeyboardShortcuts from '../hooks/useKeyboardShortcuts';
 import useChatHistory from '../hooks/useChatHistory';
 import { sendMessage } from '../services/chat';
 import '../App.css';
 
 function ChatPage() {
+  const { language, setLanguage, t } = useLanguage();
+  const { showToast } = useToast();
   const [loading, setLoading] = useState(false);
-  const [language, setLanguage] = useState('en');
   const [messages, setMessages] = useState([]);
   const [isTyping, setIsTyping] = useState(false);
   const [typingStatus, setTypingStatus] = useState('');
@@ -26,13 +28,6 @@ function ChatPage() {
   const { chatHistory, saveChat, loadChat, deleteChat, renameChat } = useChatHistory();
 
   useEffect(() => {
-    const savedLang = localStorage.getItem('selectedLanguage') || 'en';
-    setLanguage(savedLang);
-    document.documentElement.dir = savedLang === 'ar' ? 'rtl' : 'ltr';
-    document.documentElement.lang = savedLang;
-  }, []);
-
-  useEffect(() => {
     const handleResize = () => {
       if (window.innerWidth < 768) {
         setIsSidebarOpen(false);
@@ -43,13 +38,6 @@ function ChatPage() {
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
-
-  const handleLanguageChange = (newLanguage) => {
-    setLanguage(newLanguage);
-    localStorage.setItem('selectedLanguage', newLanguage);
-    document.documentElement.dir = newLanguage === 'ar' ? 'rtl' : 'ltr';
-    document.documentElement.lang = newLanguage;
-  };
 
   const handleSendMessage = async (questionText, modelOverride) => {
     if (!questionText.trim()) return;
@@ -116,7 +104,7 @@ function ChatPage() {
             m.id === botMessageId
               ? {
                   ...m,
-                  text: errorMsg || (translations[language] || translations['en']).errorMessage,
+                  text: errorMsg || t.errorMessage,
                   streaming: false,
                   error: true,
                 }
@@ -220,7 +208,6 @@ function ChatPage() {
       )}
 
       <Sidebar
-        language={language}
         isOpen={isSidebarOpen}
         onClose={() => setIsSidebarOpen(false)}
         onNewChat={handleNewChat}
@@ -233,8 +220,6 @@ function ChatPage() {
 
       <div className="main-content">
         <Header
-          language={language}
-          onLanguageChange={handleLanguageChange}
           onToggleSidebar={handleToggleSidebar}
           onClearChat={handleClearChat}
           onToggleCompact={handleToggleCompact}
@@ -245,7 +230,6 @@ function ChatPage() {
         <div className="chat-area">
           <ChatWindow
             messages={messages}
-            language={language}
             isTyping={isTyping}
             typingStatus={typingStatus}
             onSelectSuggestion={handleSelectSuggestion}
@@ -255,18 +239,16 @@ function ChatPage() {
 
         <MessageInput
           onSendMessage={handleSendMessage}
-          language={language}
           disabled={loading}
           selectedModel={selectedModel}
           onModelChange={setSelectedModel}
         />
 
-        <Footer language={language} />
+        <Footer />
       </div>
 
       {showShortcuts && (
         <ShortcutsModal
-          language={language}
           onClose={() => setShowShortcuts(false)}
         />
       )}

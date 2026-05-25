@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
-import { translations } from '../utils/translations';
+import { useLanguage } from '../contexts/LanguageContext';
 import jsPDF from 'jspdf';
 
 
-function Header({ language, onLanguageChange, onClearChat, onToggleCompact, isCompact, messages, onToggleSidebar }) {
-    const t = translations[language] || translations['en'];
+function Header({ onClearChat, onToggleCompact, isCompact, messages, onToggleSidebar }) {
+    const { language, setLanguage, t } = useLanguage();
 
     const [showExportMenu, setShowExportMenu] = useState(false);
     const [showClearConfirm, setShowClearConfirm] = useState(false);
@@ -108,13 +108,13 @@ function Header({ language, onLanguageChange, onClearChat, onToggleCompact, isCo
                     <div className="language-switcher">
                         <button
                             className={`lang-btn ${language === 'ar' ? 'active' : ''}`}
-                            onClick={() => onLanguageChange('ar')}
+                            onClick={() => setLanguage('ar')}
                         >
                             {t.languageAr}
                         </button>
                         <button
                             className={`lang-btn ${language === 'en' ? 'active' : ''}`}
-                            onClick={() => onLanguageChange('en')}
+                            onClick={() => setLanguage('en')}
                         >
                             {t.languageEn}
                         </button>

@@ -1,9 +1,9 @@
 import React from 'react';
-import { translations } from '../utils/translations';
+import { useLanguage } from '../contexts/LanguageContext';
 
 
-function SuggestedQuestions({ language, onSelectSuggestion }) {
-    const t = translations[language] || translations['en'];
+function SuggestedQuestions({ onSelectSuggestion }) {
+    const { t } = useLanguage();
 
 
    

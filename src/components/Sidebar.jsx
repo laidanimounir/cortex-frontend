@@ -1,11 +1,10 @@
 import React, { useState } from 'react';
-import { translations } from '../utils/translations';
+import { useLanguage } from '../contexts/LanguageContext';
 
-function Sidebar({ language, isOpen, onClose, onNewChat, chatHistory, onLoadChat, onDeleteChat, onRenameChat, activeChatId }) {
+function Sidebar({ isOpen, onClose, onNewChat, chatHistory, onLoadChat, onDeleteChat, onRenameChat, activeChatId }) {
+    const { language, t } = useLanguage();
     const [editingId, setEditingId] = useState(null);
     const [editTitle, setEditTitle] = useState('');
-    const t = translations[language] || translations['en'];
-
 
     const groupChatsByDate = (history) => {
         const groups = {

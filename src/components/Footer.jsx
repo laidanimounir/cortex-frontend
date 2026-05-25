@@ -1,9 +1,9 @@
 import React from 'react';
-import { translations } from '../utils/translations';
+import { useLanguage } from '../contexts/LanguageContext';
 
 
-function Footer({ language }) {
-    const t = translations[language] || translations['en'];
+function Footer() {
+    const { t } = useLanguage();
 
 
     return (
