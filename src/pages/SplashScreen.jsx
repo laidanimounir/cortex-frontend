@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '../contexts/LanguageContext';
 import './SplashScreen.css';
+import logoImg from '../assets/images/logo.png';
 
 const welcomeMessages = {
   en: [
@@ -59,7 +60,7 @@ function SplashScreen() {
         <div className="splash-logo-frame">
           <div className="splash-logo-glow" />
           <img
-            src="../assets/images/logo.png"
+            src={logoImg}
             alt="Cortex"
             className="splash-logo-img"
           />
