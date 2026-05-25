@@ -225,6 +225,33 @@ MIT
 
 ---
 
+## Known Issues & Fixes
+
+### 🐛 "All providers failed" after several messages
+
+**Root Cause:**
+The full conversation history was sent to the AI provider
+on every request with no trimming or token limit check.
+After several long messages (e.g. code blocks, HTML, SQL),
+the total token count exceeded the provider's context window,
+causing a 400 error. The fallback logic was only triggered
+for 429 and 503 errors, so the 400 was silently swallowed
+and returned as "All providers failed" with no logging.
+
+**Fixes Applied:**
+- ✅ Added `trimMessages()` — keeps only last 10 messages,
+  truncates messages longer than 2000 chars
+- ✅ Fallback now triggers on ALL provider errors, not just 429/503
+- ✅ Both Groq and fallback errors are now logged to console
+  with status code and message
+- ✅ User sees a friendly error message instead of raw error text
+
+**Files Changed:**
+- `api/chat.cjs` — lines 44-47 (trimming), 112 (fallback trigger), 146 (error logging)
+- `src/[your chat component]` — error display handler
+
+---
+
 ## Built by Mounir
 
 100% Algerian-made. 🇩🇿

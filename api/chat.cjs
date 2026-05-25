@@ -7,6 +7,18 @@ const MODEL_MAP = {
   'cortex-think': 'deepseek-r1-distill-llama-70b',
 };
 
+/* FIX 1 - History Trimming */
+function trimMessages(messages, maxMessages = 10, maxCharsPerMessage = 2000) {
+  const trimmed = messages.slice(-maxMessages);
+  return trimmed.map(msg => ({
+    ...msg,
+    content: typeof msg.content === 'string'
+      && msg.content.length > maxCharsPerMessage
+        ? msg.content.slice(-maxCharsPerMessage) + '\n[...truncated]'
+        : msg.content
+  }));
+}
+
 async function callOpenRouterFallback(messages) {
   const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
     method: 'POST',
@@ -43,7 +55,8 @@ module.exports = async (req, res) => {
 
   const fullMessages = [
     { role: 'system', content: SYSTEM_PROMPT },
-    ...messages,
+    /* FIX 1 - History Trimming */
+    ...trimMessages(messages),
   ];
 
   if (model === 'cortex-vision') {
@@ -109,52 +122,56 @@ module.exports = async (req, res) => {
     res.write('data: [DONE]\n\n');
     res.end();
   } catch (error) {
-    if (error.status === 429 || error.status === 503) {
-      try {
-        const fallbackStream = await callOpenRouterFallback(fullMessages);
-        const reader = fallbackStream.getReader();
-        const decoder = new TextDecoder();
-        let buffer = '';
+    /* FIX 2 - Fallback Trigger */
+    console.error('[Groq Error]', {
+      status: error.status,
+      message: error.message,
+    });
+    // Always attempt fallback regardless of error type
+    try {
+      const fallbackStream = await callOpenRouterFallback(fullMessages);
+      const reader = fallbackStream.getReader();
+      const decoder = new TextDecoder();
+      let buffer = '';
 
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
-          buffer += decoder.decode(value, { stream: true });
-          const lines = buffer.split('\n');
-          buffer = lines.pop();
-          for (const line of lines) {
-            if (line.startsWith('data: ')) {
-              const data = line.slice(6);
-              if (data === '[DONE]') {
-                res.write('data: [DONE]\n\n');
-              } else {
-                try {
-                  const parsed = JSON.parse(data);
-                  const token = parsed.choices?.[0]?.delta?.content || '';
-                  if (token) {
-                    res.write(`data: ${JSON.stringify({ token })}\n\n`);
-                  }
-                } catch (e) {
-                  // skip malformed chunks
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n');
+        buffer = lines.pop();
+        for (const line of lines) {
+          if (line.startsWith('data: ')) {
+            const data = line.slice(6);
+            if (data === '[DONE]') {
+              res.write('data: [DONE]\n\n');
+            } else {
+              try {
+                const parsed = JSON.parse(data);
+                const token = parsed.choices?.[0]?.delta?.content || '';
+                if (token) {
+                  res.write(`data: ${JSON.stringify({ token })}\n\n`);
                 }
+              } catch (e) {
+                // skip malformed chunks
               }
             }
           }
         }
+      }
 
-        res.end();
-      } catch (fallbackError) {
-        res.status(502).json({ error: 'All providers failed' });
-      }
-    } else {
-      try {
-        const errText = error.message || 'Internal server error';
-        res.write(`data: ${JSON.stringify({ token: errText })}\n\n`);
-        res.write('data: [DONE]\n\n');
-        res.end();
-      } catch (e2) {
-        res.status(500).json({ error: 'Internal server error' });
-      }
+      res.end();
+    } catch (fallbackError) {
+      /* FIX 3 - Error Logging */
+      console.error('[Fallback Error]', {
+        status: fallbackError.status,
+        message: fallbackError.message,
+        stack: fallbackError.stack,
+      });
+      res.status(502).json({
+        error: 'All providers failed',
+        reason: fallbackError.message,
+      });
     }
   }
 };
