@@ -1,4 +1,4 @@
-const { SYSTEM_PROMPT } = require('./system-prompt');
+const { SYSTEM_PROMPT } = require('./system-prompt.cjs');
 
 module.exports = async (req, res) => {
   if (req.method !== 'POST') {

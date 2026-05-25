@@ -1,6 +1,6 @@
 export async function sendMessage({ messages, model, language, onToken, onDone, onError }) {
   try {
-    const response = await fetch('/api/chat', {
+    const response = await fetch('http://localhost:3001/', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ messages, model, language }),

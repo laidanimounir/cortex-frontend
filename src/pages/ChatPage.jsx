@@ -65,7 +65,7 @@ function ChatPage() {
     setMessages(prev => [...prev, userMessage, botMessage]);
     setLoading(true);
     setIsTyping(true);
-    setTypingStatus(translations[language].analyzing || '');
+    setTypingStatus(t.analyzing || '');
 
     const chatMessages = [...messages, userMessage].map(m => ({
       role: m.type === 'user' ? 'user' : 'assistant',
@@ -163,6 +163,10 @@ function ChatPage() {
     document.body.classList.toggle('compact-mode');
   };
 
+  const handleToggleSidebar = () => {
+    setIsSidebarOpen(prev => !prev);
+  };
+
   useKeyboardShortcuts({
     onClearChat: handleClearChat,
     onShowShortcuts: () => setShowShortcuts(true),
@@ -205,10 +209,6 @@ function ChatPage() {
       setMessages([]);
       setCurrentChatId(Date.now());
     }
-  };
-
-  const handleToggleSidebar = () => {
-    setIsSidebarOpen(prev => !prev);
   };
 
   return (

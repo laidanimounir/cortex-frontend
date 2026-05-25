@@ -1,6 +1,6 @@
 const Groq = require('groq-sdk');
 
-const { SYSTEM_PROMPT } = require('./system-prompt');
+const { SYSTEM_PROMPT } = require('./system-prompt.cjs');
 
 const MODEL_MAP = {
   'cortex-fast': 'llama-3.3-70b-versatile',
@@ -85,6 +85,10 @@ module.exports = async (req, res) => {
     return;
   }
 
+  res.setHeader('Content-Type', 'text/event-stream');
+  res.setHeader('Cache-Control', 'no-cache');
+  res.setHeader('X-Accel-Buffering', 'no');
+
   const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 
   try {
@@ -94,10 +98,6 @@ module.exports = async (req, res) => {
       stream: true,
       max_tokens: 4096,
     });
-
-    res.setHeader('Content-Type', 'text/event-stream');
-    res.setHeader('Cache-Control', 'no-cache');
-    res.setHeader('X-Accel-Buffering', 'no');
 
     for await (const chunk of stream) {
       const token = chunk.choices?.[0]?.delta?.content || '';
@@ -112,9 +112,6 @@ module.exports = async (req, res) => {
     if (error.status === 429 || error.status === 503) {
       try {
         const fallbackStream = await callOpenRouterFallback(fullMessages);
-        res.setHeader('Content-Type', 'text/event-stream');
-        res.setHeader('Cache-Control', 'no-cache');
-        res.setHeader('X-Accel-Buffering', 'no');
         const reader = fallbackStream.getReader();
         const decoder = new TextDecoder();
         let buffer = '';
@@ -150,7 +147,14 @@ module.exports = async (req, res) => {
         res.status(502).json({ error: 'All providers failed' });
       }
     } else {
-      res.status(500).json({ error: 'Internal server error' });
+      try {
+        const errText = error.message || 'Internal server error';
+        res.write(`data: ${JSON.stringify({ token: errText })}\n\n`);
+        res.write('data: [DONE]\n\n');
+        res.end();
+      } catch (e2) {
+        res.status(500).json({ error: 'Internal server error' });
+      }
     }
   }
 };
