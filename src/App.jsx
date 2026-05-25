@@ -12,6 +12,7 @@ return (
 <Route path="/language" element={<LanguageSelection />} />
 <Route path="/login" element={<Login />} />
 <Route path="/chat" element={<ChatPage />} />
+<Route path="*" element={<Navigate to="/splash" replace />} />
 </Routes>
 </Router>
 );
