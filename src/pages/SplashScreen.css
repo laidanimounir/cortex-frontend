@@ -1,3 +1,4 @@
+/* ─── Container ─── */
 .splash-container {
   width: 100vw;
   height: 100vh;
@@ -8,184 +9,219 @@
   overflow: hidden;
   opacity: 0;
   transition: opacity 0.6s ease;
+  position: relative;
 }
 
 .splash-container.visible {
   opacity: 1;
 }
 
+/* ─── Top-right language toggle ─── */
+.splash-lang-top {
+  position: fixed;
+  top: 1.5rem;
+  right: 2rem;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  z-index: 100;
+  opacity: 0;
+  animation: splashFadeIn 0.5s ease-out 0.3s both;
+}
+
+[dir="rtl"] .splash-lang-top {
+  right: auto;
+  left: 2rem;
+}
+
+.splash-lang-chip {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: var(--text-muted);
+  padding: 0.3rem 0.7rem;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  transition: all 0.25s ease;
+  font-family: inherit;
+}
+
+.splash-lang-chip:hover {
+  border-color: rgba(139, 92, 246, 0.4);
+  color: var(--text-primary);
+}
+
+.splash-lang-chip.active {
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.2), rgba(6, 182, 212, 0.2));
+  border-color: rgba(139, 92, 246, 0.5);
+  color: #fff;
+}
+
+.splash-lang-divider {
+  color: rgba(255, 255, 255, 0.15);
+  font-size: 0.8rem;
+  font-weight: 300;
+}
+
+/* ─── Content stack ─── */
 .splash-content {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 1.5rem;
+  gap: 1.2rem;
   animation: splashFadeUp 0.8s ease-out 0.2s both;
+  max-width: 520px;
 }
 
-.splash-logo-wrapper {
+/* ─── Logo with feathered fade ─── */
+.splash-logo-frame {
   position: relative;
-  width: 120px;
-  height: 120px;
+  width: 160px;
+  height: 160px;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.25rem;
 }
 
 .splash-logo-glow {
   position: absolute;
-  width: 140px;
-  height: 140px;
+  width: 200px;
+  height: 200px;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(139, 92, 246, 0.3) 0%, transparent 70%);
-  animation: splashPulse 3s ease-in-out infinite;
+  background: radial-gradient(circle, rgba(139, 92, 246, 0.25) 0%, rgba(6, 182, 212, 0.12) 40%, transparent 72%);
+  animation: splashPulse 3.5s ease-in-out infinite;
 }
 
-.splash-logo {
-  width: 100px;
-  height: 100px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, #8B5CF6, #6D28D9);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 0 40px rgba(139, 92, 246, 0.4);
+.splash-logo-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
   position: relative;
   z-index: 1;
+  mask-image: radial-gradient(ellipse, black 55%, transparent 100%);
+  -webkit-mask-image: radial-gradient(ellipse, black 55%, transparent 100%);
+  filter: drop-shadow(0 0 30px rgba(139, 92, 246, 0.3));
 }
 
-.splash-logo-text {
-  font-size: 2.5rem;
-  font-weight: 800;
-  color: #FFFFFF;
-  letter-spacing: -0.05em;
-}
-
-.splash-title-wrapper {
-  display: flex;
-  align-items: center;
-  gap: 0.25rem;
-}
-
+/* ─── Title ─── */
 .splash-title {
-  font-size: 3.5rem;
+  font-size: 4rem;
   font-weight: 800;
-  background: linear-gradient(135deg, var(--accent-primary) 0%, #38D9A9 100%);
+  font-family: 'Inter', sans-serif;
+  background: linear-gradient(135deg, #A78BFA 0%, #22D3EE 60%, #2DD4BF 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
   margin: 0;
-  letter-spacing: -0.03em;
+  letter-spacing: -0.04em;
+  line-height: 1.1;
+  opacity: 0;
+  animation: splashFadeUp 0.6s ease-out 0.4s both;
 }
 
-.splash-typing-cursor {
-  font-size: 3.5rem;
-  font-weight: 100;
-  color: var(--accent-primary);
-  animation: splashBlink 1s step-end infinite;
-}
-
+/* ─── Tagline ─── */
 .splash-tagline {
-  font-size: 1.3rem;
-  color: var(--text-secondary);
+  font-size: 1.5rem;
+  color: rgba(255, 255, 255, 0.7);
   font-weight: 400;
   margin: 0;
+  letter-spacing: -0.01em;
   opacity: 0;
   animation: splashFadeUp 0.6s ease-out 0.6s both;
 }
 
+/* ─── Welcome / sub-message ─── */
 .splash-welcome {
   font-size: 1rem;
   color: var(--text-muted);
   margin: 0;
-  max-width: 400px;
+  max-width: 380px;
   text-align: center;
+  line-height: 1.6;
   opacity: 0;
   animation: splashFadeUp 0.6s ease-out 0.8s both;
 }
 
-.splash-language-row {
-  display: flex;
-  gap: 0.75rem;
-  background: var(--bg-tertiary);
-  padding: 0.35rem;
-  border-radius: 12px;
-  border: 1px solid var(--border-color);
-  opacity: 0;
-  animation: splashFadeUp 0.6s ease-out 1.0s both;
-}
-
-.splash-lang-btn {
-  padding: 0.5rem 1.5rem;
-  border: none;
-  background: transparent;
-  color: var(--text-secondary);
-  border-radius: 8px;
-  cursor: pointer;
-  font-size: 0.9rem;
-  font-weight: 500;
-  transition: all 0.2s ease;
-  font-family: inherit;
-}
-
-.splash-lang-btn:hover {
-  background: var(--bg-input);
-  color: var(--text-primary);
-}
-
-.splash-lang-btn.active {
-  background: var(--accent-primary);
-  color: #000000;
-  font-weight: 600;
-}
-
+/* ─── CTA Button ─── */
 .splash-cta {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 0.75rem;
-  padding: 1rem 2.5rem;
-  background: linear-gradient(135deg, var(--accent-primary), #38D9A9);
-  color: #000000;
-  border: none;
-  border-radius: 50px;
-  font-size: 1.1rem;
+  width: 280px;
+  padding: 1rem 0;
+  background: rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(4px);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  border-radius: 14px;
+  font-size: 1.05rem;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.3s ease;
-  margin-top: 0.5rem;
+  transition: all 0.35s ease;
+  margin-top: 0.75rem;
   font-family: inherit;
   opacity: 0;
-  animation: splashFadeUp 0.6s ease-out 1.2s both;
+  animation: splashFadeUp 0.6s ease-out 1.1s both;
+  position: relative;
+  overflow: hidden;
+}
+
+.splash-cta::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 14px;
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.15), rgba(6, 182, 212, 0.10));
+  opacity: 0;
+  transition: opacity 0.35s ease;
 }
 
 .splash-cta:hover {
+  border-color: rgba(139, 92, 246, 0.4);
   transform: translateY(-2px);
-  box-shadow: 0 8px 30px rgba(32, 201, 151, 0.3);
+  box-shadow:
+    0 0 20px rgba(139, 92, 246, 0.15),
+    0 0 60px rgba(139, 92, 246, 0.06);
+}
+
+.splash-cta:hover::before {
+  opacity: 1;
+}
+
+.splash-cta:active {
+  transform: translateY(0);
 }
 
 .splash-cta-arrow {
   transition: transform 0.3s ease;
+  position: relative;
+  z-index: 1;
 }
 
 .splash-cta:hover .splash-cta-arrow {
-  transform: translateX(4px);
+  transform: translateX(5px);
 }
 
 [dir="rtl"] .splash-cta:hover .splash-cta-arrow {
-  transform: translateX(-4px);
+  transform: translateX(-5px);
 }
 
+/* ─── Keyframes ─── */
 @keyframes splashPulse {
   0%, 100% { transform: scale(1); opacity: 0.6; }
-  50% { transform: scale(1.15); opacity: 1; }
-}
-
-@keyframes splashBlink {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0; }
+  50% { transform: scale(1.18); opacity: 1; }
 }
 
 @keyframes splashFadeUp {
-  from { opacity: 0; transform: translateY(20px); }
+  from { opacity: 0; transform: translateY(24px); }
   to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes splashFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }

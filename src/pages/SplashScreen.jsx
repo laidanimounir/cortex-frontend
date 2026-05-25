@@ -33,51 +33,45 @@ function SplashScreen() {
     return () => clearTimeout(timer);
   }, [language]);
 
-  const handleLanguageChange = (lang) => {
-    setLanguage(lang);
-    const msgs = welcomeMessages[lang] || welcomeMessages.en;
-    setWelcomeText(msgs[Math.floor(Math.random() * msgs.length)]);
-  };
-
   const handleStart = () => {
     navigate('/chat');
   };
 
   return (
     <div className={`splash-container ${showContent ? 'visible' : ''}`}>
+      <div className="splash-lang-top">
+        <button
+          className={`splash-lang-chip ${language === 'en' ? 'active' : ''}`}
+          onClick={() => setLanguage('en')}
+        >
+          EN
+        </button>
+        <span className="splash-lang-divider">|</span>
+        <button
+          className={`splash-lang-chip ${language === 'ar' ? 'active' : ''}`}
+          onClick={() => setLanguage('ar')}
+        >
+          ع
+        </button>
+      </div>
+
       <div className="splash-content">
-        <div className="splash-logo-wrapper">
+        <div className="splash-logo-frame">
           <div className="splash-logo-glow" />
-          <div className="splash-logo">
-            <span className="splash-logo-text">Cx</span>
-          </div>
+          <img
+            src="../assets/images/logo.png"
+            alt="Cortex"
+            className="splash-logo-img"
+          />
         </div>
 
-        <div className="splash-title-wrapper">
-          <span className="splash-typing-cursor">|</span>
-          <h1 className="splash-title">Cortex</h1>
-        </div>
+        <h1 className="splash-title">Cortex</h1>
 
         <p className="splash-tagline">
           {language === 'ar' ? 'تعلّم بلا حدود.' : 'Learn without limits.'}
         </p>
 
         <p className="splash-welcome">{welcomeText}</p>
-
-        <div className="splash-language-row">
-          <button
-            className={`splash-lang-btn ${language === 'en' ? 'active' : ''}`}
-            onClick={() => handleLanguageChange('en')}
-          >
-            English
-          </button>
-          <button
-            className={`splash-lang-btn ${language === 'ar' ? 'active' : ''}`}
-            onClick={() => handleLanguageChange('ar')}
-          >
-            العربية
-          </button>
-        </div>
 
         <button className="splash-cta" onClick={handleStart}>
           {language === 'ar' ? 'ابدأ المحادثة' : 'Start Chatting'}
