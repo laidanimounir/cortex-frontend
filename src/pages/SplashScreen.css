@@ -6,9 +6,6 @@
   width: 100vw;
   height: 100vh;
   background: var(--bg-primary);
-  display: flex;
-  align-items: center;
-  justify-content: center;
   overflow: hidden;
   opacity: 0;
   transition: opacity 0.6s ease;
@@ -20,7 +17,17 @@
   opacity: 1;
 }
 
-/* FIX 6 - ambient bottom glow */
+/* SPLIT LAYOUT - ambient glow bottom-left */
+.splash-container::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background: radial-gradient(ellipse 500px 400px at 0% 100%, rgba(124, 58, 237, 0.07) 0%, transparent 70%);
+}
+
+/* SPLIT LAYOUT - ambient glow bottom-center (existing) */
 .splash-container::after {
   content: '';
   position: absolute;
@@ -92,7 +99,6 @@
   color: var(--text-primary);
 }
 
-/* FIX 4 - active chip: gradient pill */
 .splash-lang-chip.active {
   background: linear-gradient(135deg, #7C3AED, #06B6D4);
   color: #fff;
@@ -103,32 +109,148 @@
   outline-offset: 2px;
 }
 
-/* ─── Content stack ─── */
+/* ═══════════════════════════════════════════
+   SPLIT LAYOUT - main row (50/50)
+   ═══════════════════════════════════════════ */
 .splash-content {
   display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 1.2rem;
-  max-width: 520px;
+  flex-direction: row;
+  width: 100%;
+  height: 100%;
   position: relative;
   z-index: 1;
 }
 
-/* ─── Logo with feathered fade ─── */
-.splash-logo-frame {
-  position: relative;
-  width: 200px;
-  height: 200px;
+/* ─── LEFT COLUMN: text ─── */
+.splash-left {
+  width: 50%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding-left: 8vw;
+  text-align: left;
+  gap: 0.5rem;
+  border-right: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+[dir="rtl"] .splash-left {
+  text-align: right;
+  padding-left: 0;
+  padding-right: 8vw;
+  border-right: none;
+  border-left: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+/* SPLIT LAYOUT - eyebrow label */
+.splash-eyebrow {
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  margin: 0 0 0.25rem;
+  background: linear-gradient(135deg, #7C3AED, #06B6D4);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  opacity: 0;
+  animation: splashEnter 0.5s ease-out 0s both;
+}
+
+/* ─── RIGHT COLUMN: visual ─── */
+.splash-right {
+  width: 50%;
+  height: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: 1.5rem;
+  position: relative;
+  overflow: hidden;
+}
+
+/* SPLIT LAYOUT - decorative floating circles container */
+.splash-right-bg {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+/* SPLIT LAYOUT - floating circles */
+.splash-float-circle {
+  position: absolute;
+  border-radius: 50%;
+  opacity: 0;
+}
+
+.splash-float-circle.c1 {
+  width: 6px;
+  height: 6px;
+  background: rgba(6, 182, 212, 0.4);
+  top: 20%;
+  right: 15%;
+  animation: splashFadeIn 0.6s ease-out 1.2s both, splashFloat1 3s ease-in-out 1.2s infinite;
+  will-change: transform;
+}
+
+.splash-float-circle.c2 {
+  width: 4px;
+  height: 4px;
+  background: rgba(124, 58, 237, 0.5);
+  top: 60%;
+  right: 25%;
+  animation: splashFadeIn 0.6s ease-out 1.2s both, splashFloat2 4s ease-in-out 1.2s infinite;
+  will-change: transform;
+}
+
+.splash-float-circle.c3 {
+  width: 8px;
+  height: 8px;
+  background: rgba(6, 182, 212, 0.25);
+  top: 75%;
+  right: 10%;
+  animation: splashFadeIn 0.6s ease-out 1.2s both, splashFloat3 5s ease-in-out 1.2s infinite;
+  will-change: transform;
+}
+
+[dir="rtl"] .splash-float-circle.c1 {
+  right: auto;
+  left: 15%;
+}
+
+[dir="rtl"] .splash-float-circle.c2 {
+  right: auto;
+  left: 25%;
+}
+
+[dir="rtl"] .splash-float-circle.c3 {
+  right: auto;
+  left: 10%;
+}
+
+/* SPLIT LAYOUT - logo 280px, glow 350px, outer ring 420px */
+.splash-logo-frame {
+  position: relative;
+  width: 280px;
+  height: 280px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* SPLIT LAYOUT - outer glow ring */
+.splash-logo-glow-outer {
+  position: absolute;
+  width: 420px;
+  height: 420px;
+  border-radius: 50%;
+  background: rgba(124, 58, 237, 0.06);
+  filter: blur(40px);
 }
 
 .splash-logo-glow {
   position: absolute;
-  width: 250px;
-  height: 250px;
+  width: 350px;
+  height: 350px;
   border-radius: 50%;
   background: radial-gradient(circle, rgba(139, 92, 246, 0.25) 0%, rgba(6, 182, 212, 0.12) 40%, transparent 72%);
   animation: splashPulse 3.5s ease-in-out infinite;
@@ -145,17 +267,16 @@
   -webkit-mask-image: radial-gradient(ellipse, black 55%, transparent 100%);
   filter: drop-shadow(0 0 30px rgba(139, 92, 246, 0.3));
   opacity: 0;
-  animation: splashScaleIn 0.5s ease-out 0s both;
+  animation: splashLogoIn 0.7s ease-out 0.3s both;
 }
 
-/* FIX 2 - image error fallback */
 .splash-logo-fallback {
   width: 100%;
   height: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 4rem;
+  font-size: 5rem;
   font-weight: 800;
   font-family: 'Inter', sans-serif;
   background: linear-gradient(135deg, #A78BFA, #22D3EE);
@@ -168,7 +289,7 @@
 
 /* ─── Title ─── */
 .splash-title {
-  font-size: 4rem;
+  font-size: 5rem;
   font-weight: 800;
   font-family: 'Inter', sans-serif;
   color: #A78BFA;
@@ -180,18 +301,34 @@
   letter-spacing: -0.04em;
   line-height: 1.1;
   opacity: 0;
-  animation: splashEnter 0.5s ease-out 0.3s both;
+  animation: splashEnter 0.5s ease-out 0.2s both;
 }
 
 /* ─── Tagline ─── */
 .splash-tagline {
-  font-size: 1.5rem;
-  color: rgba(255, 255, 255, 0.7);
+  font-size: 1.4rem;
+  color: rgba(255, 255, 255, 0.8);
   font-weight: 400;
   margin: 0;
   letter-spacing: -0.01em;
   opacity: 0;
-  animation: splashEnter 0.4s ease-out 0.6s both;
+  animation: splashEnter 0.4s ease-out 0.4s both;
+}
+
+/* SPLIT LAYOUT - horizontal divider */
+.splash-divider {
+  width: 60px;
+  height: 2px;
+  background: linear-gradient(90deg, #7C3AED, #06B6D4);
+  margin: 1.5rem 0;
+  border-radius: 1px;
+  opacity: 0;
+  animation: splashDividerIn 0.4s ease-out 0.6s both;
+}
+
+[dir="rtl"] .splash-divider {
+  margin-left: auto;
+  margin-right: 0;
 }
 
 /* ─── Welcome / sub-message ─── */
@@ -199,11 +336,10 @@
   font-size: 1rem;
   color: var(--text-muted);
   margin: 0;
-  max-width: 380px;
-  text-align: center;
+  max-width: 400px;
   line-height: 1.6;
   opacity: 0;
-  animation: splashEnter 0.4s ease-out 0.8s both;
+  animation: splashEnter 0.4s ease-out 0.7s both;
 }
 
 /* ─── CTA Button ─── */
@@ -222,20 +358,18 @@
   font-weight: 600;
   cursor: pointer;
   transition: transform 0.35s ease, box-shadow 0.35s ease;
-  margin-top: 0.75rem;
+  margin-top: 0.5rem;
   font-family: inherit;
   opacity: 0;
-  animation: splashEnter 0.4s ease-out 1s both;
+  animation: splashBtnEnter 0.4s ease-out 0.9s both;
   position: relative;
 }
 
-/* FIX 3 - hover glow */
 .splash-cta:hover {
   transform: translateY(-2px);
   box-shadow: 0 0 24px rgba(124, 58, 237, 0.5);
 }
 
-/* FIX 3 - continuous border pulse glow */
 .splash-cta::after {
   content: '';
   position: absolute;
@@ -245,13 +379,11 @@
   animation: ctaPulse 2.5s ease-in-out infinite;
 }
 
-/* FIX 3 - focus ring */
 .splash-cta:focus-visible {
   outline: 2px solid #06B6D4;
   outline-offset: 4px;
 }
 
-/* FIX 3 - disabled state */
 .splash-cta:disabled {
   opacity: 0.5;
   cursor: not-allowed;
@@ -282,19 +414,29 @@
   50% { transform: scale(1.18); opacity: 1; }
 }
 
-/* FIX 1 - staggered entrance */
 @keyframes splashEnter {
   from { opacity: 0; transform: translateY(20px); }
   to { opacity: 1; transform: translateY(0); }
 }
 
-/* FIX 2 - logo scale-in entrance */
-@keyframes splashScaleIn {
-  from { opacity: 0; transform: scale(0.85); }
+/* SPLIT LAYOUT - divider width reveal */
+@keyframes splashDividerIn {
+  from { width: 0; opacity: 0; }
+  to { width: 60px; opacity: 1; }
+}
+
+/* SPLIT LAYOUT - logo entrance (scale + fade) */
+@keyframes splashLogoIn {
+  from { opacity: 0; transform: scale(0.9); }
   to { opacity: 1; transform: scale(1); }
 }
 
-/* FIX 3 - CTA glow pulse */
+/* SPLIT LAYOUT - button entrance (translate + scale) */
+@keyframes splashBtnEnter {
+  from { opacity: 0; transform: translateY(20px) scale(0.95); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
 @keyframes ctaPulse {
   0%, 100% { box-shadow: 0 0 8px rgba(124, 58, 237, 0.3); }
   50% { box-shadow: 0 0 24px rgba(124, 58, 237, 0.5); }
@@ -305,51 +447,122 @@
   to { opacity: 1; }
 }
 
-/* ─── Responsive ─── */
+/* SPLIT LAYOUT - float animations for decorative circles */
+@keyframes splashFloat1 {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+
+@keyframes splashFloat2 {
+  0%, 100% { transform: translateY(8px); }
+  50% { transform: translateY(0); }
+}
+
+@keyframes splashFloat3 {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+
+/* ─── Responsive: tablet & mobile ─── */
 @media (max-width: 768px) {
+  .splash-content {
+    flex-direction: column;
+    height: auto;
+    min-height: 100vh;
+  }
+
+  .splash-left,
+  .splash-right {
+    width: 100%;
+    height: auto;
+    padding-left: 0;
+    text-align: center;
+    align-items: center;
+    border: none;
+  }
+
+  [dir="rtl"] .splash-left {
+    padding-right: 0;
+    border: none;
+  }
+
+  .splash-left {
+    padding: 6vh 5vw 2vh;
+  }
+
+  .splash-right {
+    padding: 2vh 5vw 6vh;
+  }
+
+  .splash-divider {
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .splash-float-circle {
+    display: none;
+  }
+
+  .splash-logo-glow-outer {
+    display: none;
+  }
+
   .splash-logo-frame {
-    width: 150px;
-    height: 150px;
+    width: 140px;
+    height: 140px;
   }
+
   .splash-logo-glow {
-    width: 190px;
-    height: 190px;
+    width: 180px;
+    height: 180px;
   }
+
   .splash-title {
     font-size: 2.8rem;
   }
+
   .splash-tagline {
     font-size: 1.2rem;
   }
+
   .splash-cta {
-    width: min(280px, 90vw);
+    width: 90vw;
   }
-  .splash-content {
+
+  .splash-left {
+    border-right: none;
+  }
+
+  .splash-welcome {
     max-width: 90vw;
   }
 }
 
 @media (max-width: 480px) {
+  .splash-title {
+    font-size: 2.2rem;
+  }
+
+  .splash-tagline {
+    font-size: 1rem;
+  }
+
   .splash-logo-frame {
     width: 120px;
     height: 120px;
   }
+
   .splash-logo-glow {
     width: 155px;
     height: 155px;
   }
-  .splash-title {
-    font-size: 2.2rem;
-  }
-  .splash-tagline {
-    font-size: 1rem;
-  }
+
   .splash-cta {
     width: 90vw;
   }
 }
 
-/* FIX 1 - respect reduced motion */
+/* ─── Reduced motion ─── */
 @media (prefers-reduced-motion: reduce) {
   * {
     animation: none !important;
