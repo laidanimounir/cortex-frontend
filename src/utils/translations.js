@@ -68,7 +68,10 @@ export const translations = {
     signUp: "سجل الآن",
 
     // Footer
-    footer: "© 2025 – بناه منير"
+    footer: "© 2025 – بناه منير",
+
+    // Errors
+    errorMessage: "عذراً، حدث خطأ في الاتصال. يرجى التحقق من اتصالك والمحاولة مرة أخرى."
   },
 
   en: {
@@ -140,7 +143,10 @@ export const translations = {
     signUp: "Sign up",
 
     // Footer
-    footer: "© 2025 – Built by Mounir"
+    footer: "© 2025 – Built by Mounir",
+
+    // Errors
+    errorMessage: "Sorry, a connection error occurred. Please check your connection and try again."
   },
 
   de: {

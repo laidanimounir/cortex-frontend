@@ -101,7 +101,7 @@ function ChatPage() {
       const errorMessage = {
         id: Date.now() + 1,
         type: 'bot',
-        text: 'عذراً، حدث خطأ في الاتصال. تأكد من تشغيل الخادم.',
+        text: (translations[language] || translations['en']).errorMessage,
         metadata: null,
         isDeepThink: false,
         error: true,
