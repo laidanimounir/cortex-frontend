@@ -3,7 +3,7 @@ import { useLanguage } from '../contexts/LanguageContext';
 import jsPDF from 'jspdf';
 
 
-function Header({ onClearChat, onToggleCompact, isCompact, messages, onToggleSidebar }) {
+function Header({ onClearChat, onToggleCompact, isCompact, messages, onToggleSidebar, onToggleFocus, focusMode }) {
     const { language, setLanguage, t } = useLanguage();
 
     const [showExportMenu, setShowExportMenu] = useState(false);
@@ -129,6 +129,14 @@ function Header({ onClearChat, onToggleCompact, isCompact, messages, onToggleSid
                             title={t.compactMode}
                         >
                             ⊟
+                        </button>
+
+                        <button
+                            className={`action-btn ${focusMode ? 'active' : ''}`}
+                            onClick={onToggleFocus}
+                            title={t.focusMode}
+                        >
+                            ◎
                         </button>
 
                        

@@ -4,12 +4,23 @@ import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import remarkGfm from 'remark-gfm';
 import { useLanguage } from '../contexts/LanguageContext';
+import { useToast } from '../contexts/ToastContext';
+import { useMessageRatings } from '../hooks/useMessageRatings';
 import SuggestedQuestions from './SuggestedQuestions';
 
+const MODEL_LABELS = {
+  'cortex-fast': { en: 'Fast', ar: 'سريع' },
+  'cortex-think': { en: 'Think', ar: 'تفكير' },
+  'cortex-vision': { en: 'Vision', ar: 'رؤية' },
+};
+
 function ChatWindow({ messages, isTyping, typingStatus, onSelectSuggestion, onRegenerateResponse }) {
-    const { language, t } = useLanguage();
+  const { language, t } = useLanguage();
+  const { showToast } = useToast();
+  const { getRating, setRating } = useMessageRatings();
   const messagesEndRef = useRef(null);
   const [copiedIndex, setCopiedIndex] = useState(null);
+  const [copiedCodeBlock, setCopiedCodeBlock] = useState(null);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -22,6 +33,25 @@ function ChatWindow({ messages, isTyping, typingStatus, onSelectSuggestion, onRe
       setTimeout(() => setCopiedIndex(null), 2000);
     } catch (error) {
       console.error('Failed to copy:', error);
+    }
+  };
+
+  const copyCode = async (code) => {
+    try {
+      await navigator.clipboard.writeText(code);
+      setCopiedCodeBlock(code.slice(0, 20));
+      setTimeout(() => setCopiedCodeBlock(null), 2000);
+    } catch (error) {
+      console.error('Failed to copy code:', error);
+    }
+  };
+
+  const handleRating = (messageId, value) => {
+    const current = getRating(messageId);
+    const newValue = current === value ? null : value;
+    setRating(messageId, newValue);
+    if (newValue && !current) {
+      showToast('Thanks for the feedback!', 'success');
     }
   };
 
@@ -50,10 +80,6 @@ function ChatWindow({ messages, isTyping, typingStatus, onSelectSuggestion, onRe
   return (
     <div className="chat-window">
       <div className="messages-container">
-        {messages.length === 0 && (
-          <SuggestedQuestions onSelectSuggestion={onSelectSuggestion} />
-        )}
-
         {messages.map((msg, index) => (
           <div key={msg.id || index} className={`message ${msg.type}`}>
             <div className="message-bubble">
@@ -73,16 +99,28 @@ function ChatWindow({ messages, isTyping, typingStatus, onSelectSuggestion, onRe
                       components={{
                         code({ node, inline, className, children, ...props }) {
                           const match = /language-(\w+)/.exec(className || '');
-                          return !inline && match ? (
-                            <SyntaxHighlighter
-                              style={vscDarkPlus}
-                              language={match[1]}
-                              PreTag="div"
-                              {...props}
-                            >
-                              {String(children).replace(/\n$/, '')}
-                            </SyntaxHighlighter>
-                          ) : (
+                          if (!inline && match) {
+                            const codeString = String(children).replace(/\n$/, '');
+                            return (
+                              <div className="code-block-wrapper">
+                                <button
+                                  className="code-copy-btn"
+                                  onClick={() => copyCode(codeString)}
+                                >
+                                  {copiedCodeBlock === codeString.slice(0, 20) ? t.copied : t.copyCode}
+                                </button>
+                                <SyntaxHighlighter
+                                  style={vscDarkPlus}
+                                  language={match[1]}
+                                  PreTag="div"
+                                  {...props}
+                                >
+                                  {codeString}
+                                </SyntaxHighlighter>
+                              </div>
+                            );
+                          }
+                          return (
                             <code className={className} {...props}>
                               {children}
                             </code>
@@ -97,33 +135,56 @@ function ChatWindow({ messages, isTyping, typingStatus, onSelectSuggestion, onRe
                 </>
               )}
 
-              {msg.type === 'bot' && (getModelBadge(msg.model))}
+              {getModelBadge(msg.model)}
 
               {msg.type === 'user' && (
                 <p className="message-text">{msg.text}</p>
               )}
 
               {msg.type === 'bot' && !msg.streaming && (
-                <div className="message-actions">
-                  <button
-                    className="action-icon-btn"
-                    onClick={() => copyToClipboard(msg.text, index)}
-                    title={copiedIndex === index ? t.copied : t.copy}
-                  >
-                    <CopyIcon />
-                    <span>{copiedIndex === index ? t.copied : t.copy}</span>
-                  </button>
-
-                  {onRegenerateResponse && (
+                <>
+                  <div className="message-actions">
                     <button
                       className="action-icon-btn"
-                      onClick={() => onRegenerateResponse(index)}
-                      title={t.regenerate}
+                      onClick={() => copyToClipboard(msg.text, index)}
+                      title={copiedIndex === index ? t.copied : t.copy}
                     >
-                      <RegenerateIcon />
+                      <CopyIcon />
+                      <span>{copiedIndex === index ? t.copied : t.copy}</span>
                     </button>
-                  )}
-                </div>
+
+                    {onRegenerateResponse && (
+                      <button
+                        className="action-icon-btn"
+                        onClick={() => onRegenerateResponse(index)}
+                        title={t.regenerate}
+                      >
+                        <RegenerateIcon />
+                      </button>
+                    )}
+                  </div>
+
+                  <div className="message-ratings">
+                    <button
+                      className={`rating-btn ${getRating(msg.id) === 'up' ? 'active' : ''}`}
+                      onClick={() => handleRating(msg.id, 'up')}
+                      title="Helpful"
+                    >
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill={getRating(msg.id) === 'up' ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2">
+                        <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3H14z" />
+                      </svg>
+                    </button>
+                    <button
+                      className={`rating-btn ${getRating(msg.id) === 'down' ? 'active' : ''}`}
+                      onClick={() => handleRating(msg.id, 'down')}
+                      title="Not helpful"
+                    >
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill={getRating(msg.id) === 'down' ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2">
+                        <path d="M10 15v4a3 3 0 0 0 3 3l4-9V2H5.72a2 2 0 0 0-2 1.7l-1.38 9a2 2 0 0 0 2 2.3H10z" />
+                      </svg>
+                    </button>
+                  </div>
+                </>
               )}
 
               {msg.type === 'bot' && msg.metadata && !msg.streaming && (
@@ -159,6 +220,15 @@ function ChatWindow({ messages, isTyping, typingStatus, onSelectSuggestion, onRe
               <p className="typing-text">{typingStatus || t.typing}</p>
             </div>
           </div>
+        )}
+
+        {!messages.some(m => m.streaming) && (
+          <SuggestedQuestions
+            onSelectSuggestion={onSelectSuggestion}
+            lastBotMessage={
+              [...messages].reverse().find(m => m.type === 'bot')?.text || null
+            }
+          />
         )}
 
         <div ref={messagesEndRef} />

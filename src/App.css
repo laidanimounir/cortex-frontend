@@ -1254,6 +1254,17 @@ body.compact-mode .app-header {
    Footer
    ===================================== */
 
+.word-counter {
+  text-align: right;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  padding: 0 0.5rem;
+}
+
+[dir="rtl"] .word-counter {
+  text-align: left;
+}
+
 .app-footer {
   text-align: center;
   color: var(--text-muted);
@@ -1531,6 +1542,125 @@ body.compact-mode .app-header {
     opacity: 1;
     transform: translateY(0);
   }
+}
+
+/* =====================================
+   Code Block Copy Button
+   ===================================== */
+
+.code-block-wrapper {
+  position: relative;
+  margin: 1rem 0;
+}
+
+.code-copy-btn {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  padding: 0.3rem 0.6rem;
+  background: var(--bg-input);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  z-index: 10;
+  font-family: inherit;
+}
+
+.code-block-wrapper:hover .code-copy-btn {
+  opacity: 1;
+}
+
+.code-copy-btn:hover {
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+  border-color: var(--accent-primary);
+}
+
+/* =====================================
+   Message Ratings (👍👎)
+   ===================================== */
+
+.message-ratings {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+}
+
+.rating-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: 1px solid var(--border-color);
+  background: var(--bg-tertiary);
+  border-radius: 8px;
+  cursor: pointer;
+  color: var(--text-muted);
+  transition: all 0.2s ease;
+}
+
+.rating-btn:hover {
+  background: var(--bg-input);
+  color: var(--text-primary);
+  border-color: var(--border-active);
+}
+
+.rating-btn.active {
+  color: var(--accent-primary);
+  border-color: var(--accent-primary);
+  background: var(--accent-glow);
+}
+
+/* =====================================
+   Focus Mode
+   ===================================== */
+
+.focus-mode .app-header {
+  display: none;
+}
+
+.focus-mode .sidebar {
+  display: none;
+}
+
+.focus-mode .app-footer {
+  display: none;
+}
+
+.focus-exit-btn {
+  position: fixed;
+  top: 1rem;
+  right: 1rem;
+  z-index: 100;
+  width: 40px;
+  height: 40px;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-color);
+  border-radius: 50%;
+  color: var(--text-secondary);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.6;
+  transition: all 0.2s ease;
+  font-size: 1.1rem;
+}
+
+.focus-exit-btn:hover {
+  opacity: 1;
+  background: var(--bg-input);
+  color: var(--text-primary);
+}
+
+[dir="rtl"] .focus-exit-btn {
+  right: auto;
+  left: 1rem;
 }
 
 /* =====================================

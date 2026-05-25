@@ -146,10 +146,14 @@ function Sidebar({ isOpen, onClose, onNewChat, chatHistory, onLoadChat, onDelete
 
                 <div className="sidebar-footer">
                     <div className="user-profile">
-                        <div className="user-avatar">M</div>
+                        <div className="user-avatar">
+                          {language === 'ar' ? 'ز' : 'G'}
+                        </div>
                         <div className="user-info">
-                            <span className="user-name">Mounir</span>
-                            <span className="user-plan">Pro Plan</span>
+                            <span className="user-name">
+                              {language === 'ar' ? 'زائر' : 'Guest'}
+                            </span>
+                            <span className="user-plan">Cortex Free</span>
                         </div>
                     </div>
                 </div>

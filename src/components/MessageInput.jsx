@@ -8,7 +8,7 @@ const MODEL_OPTIONS = [
 ];
 
 function MessageInput({ onSendMessage, disabled, selectedModel, onModelChange }) {
-  const { t } = useLanguage();
+  const { language, t } = useLanguage();
 
   const [input, setInput] = useState('');
   const [showModelMenu, setShowModelMenu] = useState(false);
@@ -117,6 +117,11 @@ function MessageInput({ onSendMessage, disabled, selectedModel, onModelChange })
           </button>
         </div>
       </div>
+      {input.trim() && (
+        <div className="word-counter">
+          {input.trim().split(/\s+/).length} {t.wordCount}
+        </div>
+      )}
     </form>
   );
 }

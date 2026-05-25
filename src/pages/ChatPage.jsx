@@ -24,6 +24,7 @@ function ChatPage() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(window.innerWidth >= 768);
   const [currentChatId, setCurrentChatId] = useState(null);
   const [selectedModel, setSelectedModel] = useState('cortex-fast');
+  const [focusMode, setFocusMode] = useState(false);
 
   const { chatHistory, saveChat, loadChat, deleteChat, renameChat } = useChatHistory();
 
@@ -153,6 +154,10 @@ function ChatPage() {
     setCurrentChatId(Date.now());
   };
 
+  const handleToggleFocus = () => {
+    setFocusMode(prev => !prev);
+  };
+
   const handleToggleCompact = () => {
     setIsCompact(!isCompact);
     document.body.classList.toggle('compact-mode');
@@ -171,6 +176,14 @@ function ChatPage() {
       document.body.classList.remove('compact-mode');
     }
   }, [isCompact]);
+
+  useEffect(() => {
+    if (focusMode) {
+      document.body.classList.add('focus-mode');
+    } else {
+      document.body.classList.remove('focus-mode');
+    }
+  }, [focusMode]);
 
   const handleLoadChat = (chat) => {
     if (messages.length > 0 && currentChatId && currentChatId !== chat.id) {
@@ -222,6 +235,8 @@ function ChatPage() {
         <Header
           onToggleSidebar={handleToggleSidebar}
           onClearChat={handleClearChat}
+          onToggleFocus={handleToggleFocus}
+          focusMode={focusMode}
           onToggleCompact={handleToggleCompact}
           isCompact={isCompact}
           messages={messages}
@@ -246,6 +261,12 @@ function ChatPage() {
 
         <Footer />
       </div>
+
+      {focusMode && (
+        <button className="focus-exit-btn" onClick={handleToggleFocus} title="Exit Focus Mode">
+          ✕
+        </button>
+      )}
 
       {showShortcuts && (
         <ShortcutsModal
