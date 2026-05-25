@@ -23,7 +23,6 @@ return (
 <h1 className="language-title">🌍 Choose Your Language</h1>
 <p className="language-subtitle">Select your preferred language to continue</p>
 
-text
     <div className="language-grid">
       {languages.map((lang) => (
         <button
