@@ -5,7 +5,7 @@ function useKeyboardShortcuts({ onClearChat, onShowShortcuts }) {
     useEffect(() => {
         const handleKeyDown = (e) => {
             
-            if (e.ctrlKey && e.key === 'k') {
+            if (e.ctrlKey && e.key === 'l') {
                 e.preventDefault();
                 onClearChat();
             }
