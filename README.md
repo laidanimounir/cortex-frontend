@@ -122,16 +122,62 @@ Set the environment variables in the Vercel dashboard.
 
 ---
 
-## Roadmap (Coming Soon)
+## Roadmap
 
-- [ ] Image generation (AI-powered)
-- [ ] PDF/document upload and analysis
-- [ ] Study mode with flashcards from conversations
-- [ ] Cross-device sync (Supabase)
-- [ ] Email conversation sharing (EmailJS — UI ready, credentials needed)
-- [ ] Specialized domain models (medicine, law, engineering)
-- [ ] Mobile app (React Native)
-- [ ] Voice input and output
+### Phase 2 — Coming Soon
+
+#### A — Web Search (Tavily Integration)
+- [ ] Real-time internet search for every question that needs current information
+- [ ] Automatic search trigger — model decides when to search, user does nothing
+- [ ] Source citations shown below each answer with clickable links
+- [ ] Smart cache system — same question asked twice uses saved result
+- [ ] Daily search limit per user to protect API credits
+- [ ] Search indicator icon on messages that used web data
+
+#### B — Image Generation (Pollinations.AI)
+- [ ] "Generate image" mode button in message input
+- [ ] Free image generation with no API key required
+- [ ] Generated images displayed inline in chat with download button
+- [ ] Loading indicator during image generation
+
+#### C — Smart User Profile
+- [ ] Interest selection on Splash Screen (Science, Math, Programming, History, Literature, Business)
+- [ ] Level selection (Beginner / Intermediate / Advanced)
+- [ ] Profile saved locally — personalizes every conversation automatically
+- [ ] Dynamic system prompt — user profile sent with every request
+- [ ] "Edit my profile" button in Sidebar
+
+#### D — Math & Code Enhancements
+- [ ] KaTeX integration for beautiful math equation rendering
+- [ ] Automatic LaTeX formatting for math answers
+- [ ] Line numbers in all code blocks
+- [ ] Programming language label on every code block
+
+#### E — Cross-Device Sync (Supabase)
+- [ ] Chat history synced across all devices
+- [ ] Free Supabase backend — no server management
+- [ ] Shareable conversation links — one click to share any chat
+- [ ] Conversation search across all history
+
+#### F — Developer Dashboard
+- [ ] Private analytics dashboard (password protected)
+- [ ] Real usage stats — conversations, models used, languages
+- [ ] Weekly activity chart
+- [ ] Rating summary — total 👍 vs 👎
+- [ ] Fallback trigger log — when Groq limit was hit
+
+### Phase 3 — Future Vision
+
+- [ ] **Image generation (advanced)** — Stable Diffusion integration for higher quality
+- [ ] **PDF & document upload** — upload and analyze any document in conversation
+- [ ] **Study mode** — generate flashcards automatically from any conversation
+- [ ] **Voice input & output** — speak your question, hear the answer
+- [ ] **Email sharing** — send any conversation to email (UI ready, EmailJS credentials needed)
+- [ ] **Specialized domain models** — dedicated modes for Medicine, Law, Engineering
+- [ ] **Comet for teams** — shared workspaces for groups and businesses (29$/month/team)
+- [ ] **Mobile app** — React Native version for iOS and Android
+- [ ] **Fine-tuned Cortex model** — custom trained model on educational content
+- [ ] **Monetization** — Freemium model (Free / Plus 5$ / Pro 12$)
 
 ---
 
