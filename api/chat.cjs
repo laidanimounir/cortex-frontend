@@ -110,7 +110,9 @@ async function streamOpenRouter(messages, res) {
   });
 
   if (!response.ok) {
-    throw new Error(`OpenRouter error: ${response.status}`);
+    const errorText = await response.text();
+    console.log('[OpenRouter Full Error]', response.status, errorText);
+    throw new Error(`OpenRouter error: ${response.status} — ${errorText}`);
   }
 
   const reader = response.body.getReader();
