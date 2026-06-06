@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
-import rehypeHighlight from 'rehype-highlight';
 import rehypeRaw from 'rehype-raw';
 import { supabase } from '../lib/supabase';
 
@@ -59,7 +58,7 @@ function SharePage() {
               {msg.isImage ? (
                 <img src={msg.text} alt="" className="share-image" />
               ) : (
-                <ReactMarkdown rehypePlugins={[rehypeHighlight, rehypeRaw]}>
+                <ReactMarkdown rehypePlugins={[rehypeRaw]}>
                   {msg.text}
                 </ReactMarkdown>
               )}
