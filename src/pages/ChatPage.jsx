@@ -381,6 +381,51 @@ function ChatPage() {
     }
   };
 
+  const downloadFile = async (type) => {
+    const content = previewContent;
+    const filename = 'cortex-export';
+
+    if (type === 'txt') {
+      const blob = new Blob([content], { type: 'text/plain' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = filename + '.txt'; a.click();
+    }
+
+    if (type === 'pdf') {
+      const { jsPDF } = await import('jspdf');
+      const doc = new jsPDF();
+      const lines = doc.splitTextToSize(content, 180);
+      doc.text(lines, 15, 20);
+      doc.save(filename + '.pdf');
+    }
+
+    if (type === 'docx') {
+      const { Document, Packer, Paragraph, TextRun } = await import('docx');
+      const doc = new Document({
+        sections: [{
+          properties: {},
+          children: content.split('\n').map(line =>
+            new Paragraph({ children: [new TextRun(line)] })
+          )
+        }]
+      });
+      const blob = await Packer.toBlob(doc);
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = filename + '.docx'; a.click();
+    }
+
+    if (type === 'excel') {
+      const XLSX = await import('xlsx');
+      const rows = content.split('\n').map(line => [line]);
+      const ws = XLSX.utils.aoa_to_sheet(rows);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, 'Sheet1');
+      XLSX.writeFile(wb, filename + '.xlsx');
+    }
+  };
+
   return (
     <div className="app-container">
       {showProfileSetup && (
