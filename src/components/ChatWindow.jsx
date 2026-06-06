@@ -141,17 +141,22 @@ function ChatWindow({ messages, isTyping, typingStatus, onSelectSuggestion, onRe
                       components={{
                         code({ inline, className, children, ...props }) {
                           const match = /language-(\w+)/.exec(className || '');
-                          if (!inline && match) {
+                          if (!inline) {
                             const codeString = String(children).replace(/\n$/, '');
-                            const langLabel = match[1] === 'python' ? 'Python' : match[1] === 'javascript' ? 'JavaScript' : match[1] === 'typescript' ? 'TypeScript' : match[1] === 'html' ? 'HTML' : match[1] === 'css' ? 'CSS' : match[1] === 'bash' ? 'Bash' : match[1] === 'json' ? 'JSON' : match[1] === 'jsx' ? 'JSX' : match[1] === 'tsx' ? 'TSX' : match[1];
+                            let lang = match ? match[1] : 'text';
+                            if (!match) {
+                              if (/<html|<\!DOCTYPE/i.test(codeString)) lang = 'html';
+                              else if (/\b(function|const|let|=>)\b/.test(codeString)) lang = 'javascript';
+                            }
+                            const langLabel = lang === 'python' ? 'Python' : lang === 'javascript' ? 'JavaScript' : lang === 'typescript' ? 'TypeScript' : lang === 'html' ? 'HTML' : lang === 'css' ? 'CSS' : lang === 'bash' ? 'Bash' : lang === 'json' ? 'JSON' : lang === 'jsx' ? 'JSX' : lang === 'tsx' ? 'TSX' : lang;
                             const runnableLangs = ['html', 'javascript', 'js', 'jsx', 'tsx'];
-                            const isRunnable = runnableLangs.includes(match[1]);
+                            const isRunnable = runnableLangs.includes(lang);
                             return (
                               <div className="code-block-wrapper">
                                 <div className="code-block-header">
                                   <span className="code-lang-label">{langLabel}</span>
                                   <div className="code-header-actions">
-                                    {isRunnable && <CodeRunner code={codeString} language={match[1]} />}
+                                    {isRunnable && <CodeRunner code={codeString} language={lang} />}
                                     <button
                                       className="code-copy-btn"
                                       onClick={() => copyCode(codeString)}
@@ -162,7 +167,7 @@ function ChatWindow({ messages, isTyping, typingStatus, onSelectSuggestion, onRe
                                 </div>
                                 <SyntaxHighlighter
                                   style={vscDarkPlus}
-                                  language={match[1]}
+                                  language={lang}
                                   PreTag="div"
                                   showLineNumbers
                                   lineNumberStyle={{ minWidth: '2.5em', paddingRight: '1em', color: '#6B7280', userSelect: 'none', textAlign: 'right' }}
