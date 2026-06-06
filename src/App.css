@@ -757,6 +757,19 @@ body.compact-mode .app-header {
   color: #e0e0e0;
 }
 
+.markdown-content tr:nth-child(even) td {
+  background: #1a1f2e;
+}
+
+.markdown-content tr:nth-child(odd) td {
+  background: #13161f;
+}
+
+.markdown-content tr:hover td {
+  background: #1e2a3a;
+  transition: background 0.2s ease;
+}
+
 
 
 /* Message Metadata */
