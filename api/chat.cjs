@@ -7,6 +7,18 @@ const MODEL_MAP = {
   'cortex-think': 'deepseek-r1-distill-llama-70b',
 };
 
+const GROQ_CASCADE = [
+  'llama-3.3-70b-versatile',
+  'llama-3.1-8b-instant',
+  'gemma2-9b-it',
+  'mixtral-8x7b-32768',
+];
+
+const GROQ_CASCADE_THINK = [
+  'deepseek-r1-distill-llama-70b',
+  ...GROQ_CASCADE,
+];
+
 /* FIX 1 - slice from start */
 function trimMessages(messages, maxMessages = 10, maxCharsPerMessage = 6000) {
   const trimmed = messages.slice(-maxMessages);
@@ -19,6 +31,61 @@ function trimMessages(messages, maxMessages = 10, maxCharsPerMessage = 6000) {
   }));
 }
 
+async function streamGroqCascade(groq, messages, model, res) {
+  const isThink = model === 'cortex-think';
+  const cascade = isThink ? GROQ_CASCADE_THINK : GROQ_CASCADE;
+
+  for (const groqModel of cascade) {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 15000);
+    console.time(`groq-${groqModel}`);
+
+    try {
+      const stream = await groq.chat.completions.create({
+        model: groqModel,
+        messages,
+        stream: true,
+        max_tokens: 4096,
+        signal: controller.signal,
+      });
+      clearTimeout(timeout);
+
+      if (groqModel !== cascade[0]) {
+        res.write(`data: ${JSON.stringify({ type: 'fallback', message: 'Optimizing...' })}\n\n`);
+      }
+
+      console.log('[Model Used]', groqModel);
+
+      let isFirstChunk = true;
+      for await (const chunk of stream) {
+        if (isFirstChunk) {
+          console.timeEnd(`groq-${groqModel}`);
+          isFirstChunk = false;
+        }
+        const token = chunk.choices?.[0]?.delta?.content || '';
+        if (token) {
+          res.write(`data: ${JSON.stringify({ token })}\n\n`);
+        }
+      }
+
+      res.write('data: [DONE]\n\n');
+      res.end();
+      return;
+    } catch (error) {
+      clearTimeout(timeout);
+      console.error('[Groq Error]', {
+        status: error.status,
+        message: error.message,
+        model: groqModel,
+      });
+
+      if (groqModel === cascade[cascade.length - 1]) {
+        throw error;
+      }
+    }
+  }
+}
+
 module.exports = async (req, res) => {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
@@ -29,8 +96,6 @@ module.exports = async (req, res) => {
   if (!messages || !Array.isArray(messages)) {
     return res.status(400).json({ error: 'messages array is required' });
   }
-
-  const selectedModel = MODEL_MAP[model] || MODEL_MAP['cortex-fast'];
 
   /* FIX 2 - filter double system */
   const filteredMessages = trimMessages(
@@ -55,41 +120,13 @@ module.exports = async (req, res) => {
 
   const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 
-  const groqController = new AbortController();
-  const groqTimeout = setTimeout(() => groqController.abort(), 15000);
-  console.time('groq-request');
-
   try {
-    const stream = await groq.chat.completions.create({
-      model: selectedModel,
-      messages: fullMessages,
-      stream: true,
-      max_tokens: 4096,
-      signal: groqController.signal,
-    });
-    clearTimeout(groqTimeout);
-
-    let isFirstChunk = true;
-    for await (const chunk of stream) {
-      if (isFirstChunk) {
-        console.timeEnd('groq-request');
-        isFirstChunk = false;
-      }
-      const token = chunk.choices?.[0]?.delta?.content || '';
-      if (token) {
-        res.write(`data: ${JSON.stringify({ token })}\n\n`);
-      }
-    }
-
-    res.write('data: [DONE]\n\n');
-    res.end();
+    await streamGroqCascade(groq, fullMessages, model, res);
   } catch (error) {
-    /* FIX 2 - Fallback Trigger */
-    console.error('[Groq Error]', {
-      status: error.status,
+    console.error('[Groq Cascade Error]', {
       message: error.message,
+      status: error.status,
     });
-    /* FIX 3 - headers guard */
     if (!res.headersSent) {
       res.status(502).json({
         error: 'All providers failed',
