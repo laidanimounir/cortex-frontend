@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useLanguage } from '../contexts/LanguageContext';
 
-function Sidebar({ isOpen, onClose, onNewChat, chatHistory, onLoadChat, onDeleteChat, onRenameChat, activeChatId, onEditProfile }) {
+function Sidebar({ isOpen, onClose, onNewChat, chatHistory, onLoadChat, onDeleteChat, onRenameChat, activeChatId, onEditProfile, memory, onClearMemory }) {
     const { language, t } = useLanguage();
     const [editingId, setEditingId] = useState(null);
     const [editTitle, setEditTitle] = useState('');
@@ -145,6 +145,28 @@ function Sidebar({ isOpen, onClose, onNewChat, chatHistory, onLoadChat, onDelete
                 </div>
 
                 <div className="sidebar-footer">
+                    {memory && memory.length > 0 && (
+                      <div className="sidebar-memory">
+                        <div className="memory-header">
+                          <span>{language === 'ar' ? 'الذاكرة' : 'Memory'}</span>
+                          <button className="memory-clear-btn" onClick={onClearMemory}>
+                            {language === 'ar' ? 'مسح الكل' : 'Clear all'}
+                          </button>
+                        </div>
+                        <div className="memory-list">
+                          {memory.map((item, i) => (
+                            <div key={i} className="memory-item">
+                              <span className="memory-text">{item}</span>
+                              <button className="memory-del-btn" onClick={() => {
+                                const updated = memory.filter((_, idx) => idx !== i);
+                                localStorage.setItem('cortex_memory', JSON.stringify(updated));
+                                if (onClearMemory) onClearMemory(updated);
+                              }}>✕</button>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                     {onEditProfile && (
                         <button className="edit-profile-btn" onClick={onEditProfile}>
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">

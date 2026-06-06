@@ -38,7 +38,14 @@ function ChatPage() {
   const [showPreview, setShowPreview] = useState(false);
   const [previewContent, setPreviewContent] = useState('');
   const [previewType, setPreviewType] = useState(null);
+  const [memory, setMemory] = useState([]);
 
+  useEffect(() => {
+    const stored = localStorage.getItem('cortex_memory');
+    if (stored) {
+      try { setMemory(JSON.parse(stored)); } catch {}
+    }
+  }, []);
   /* FIX - useRef for latest messages */
   const updateMessages = (updater) => {
     setMessages(prev => {
@@ -229,6 +236,13 @@ function ChatPage() {
     const intent = detectFileIntent(questionText);
     setFileIntent(intent);
 
+    if (memory.length > 0) {
+      withSystem = [
+        { role: 'system', content: `Things you know about the user: ${memory.join(', ')}` },
+        ...withSystem,
+      ];
+    }
+
     await sendMessage({
       messages: withSystem,
       model,
@@ -269,6 +283,50 @@ function ChatPage() {
             setPreviewType(intent);
             setShowPreview(true);
           }
+        }
+        /* FIX - memory extraction */
+        const lastBotMsg = messagesRef.current.filter(m => m.type === 'bot').pop();
+        if (lastBotMsg && lastBotMsg.text) {
+          try {
+            const memRes = await fetch('http://localhost:3001/', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                messages: [
+                  { role: 'system', content: 'Extract 1 key fact from this response in one short sentence, or return null if nothing worth remembering' },
+                  { role: 'user', content: lastBotMsg.text }
+                ],
+                model: 'cortex-fast',
+                language: 'en',
+              }),
+            });
+            const memReader = memRes.body.getReader();
+            const memDecoder = new TextDecoder();
+            let memBuffer = '';
+            let memText = '';
+            while (true) {
+              const { done, value } = await memReader.read();
+              if (done) break;
+              memBuffer += memDecoder.decode(value, { stream: true });
+              for (const line of memBuffer.split('\n')) {
+                if (line.startsWith('data: ')) {
+                  try {
+                    const parsed = JSON.parse(line.slice(6));
+                    if (parsed.token) memText += parsed.token;
+                  } catch {}
+                }
+              }
+              memBuffer = '';
+            }
+            const fact = memText.replace(/^null$/i, '').trim();
+            if (fact && fact.length > 10) {
+              setMemory(prev => {
+                const updated = [...prev, fact];
+                localStorage.setItem('cortex_memory', JSON.stringify(updated));
+                return updated;
+              });
+            }
+          } catch {}
         }
       },
       onError: (errText) => {
@@ -451,6 +509,11 @@ function ChatPage() {
         onRenameChat={renameChat}
         activeChatId={currentChatId}
         onEditProfile={() => setShowProfileSetup(true)}
+        memory={memory}
+        onClearMemory={(updated) => {
+          setMemory(updated || []);
+          if (!updated) localStorage.removeItem('cortex_memory');
+        }}
       />
 
       <div className="main-content">
