@@ -31,4 +31,22 @@ ALTER TABLE conversations ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Users can manage their own conversations"
   ON conversations
   USING (user_id = current_setting('app.user_id', true) OR user_id = 'anonymous');
+
+-- For share feature:
+CREATE TABLE shared_conversations (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  original_id TEXT,
+  title TEXT NOT NULL DEFAULT 'Shared conversation',
+  messages JSONB NOT NULL DEFAULT '[]'::jsonb,
+  created_at TIMESTAMPTZ DEFAULT now(),
+  expires_at TIMESTAMPTZ
+);
+
+ALTER TABLE shared_conversations ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Anyone can read shared conversations"
+  ON shared_conversations FOR SELECT
+  USING (true);
+CREATE POLICY "Authenticated users can create shared conversations"
+  ON shared_conversations FOR INSERT
+  WITH CHECK (true);
 */

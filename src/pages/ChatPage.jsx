@@ -438,7 +438,33 @@ function ChatPage() {
 
   const handleToggleCompact = () => {
     setIsCompact(!isCompact);
-    document.body.classList.toggle('compact-mode');
+  };
+
+  const handleShare = async () => {
+    const msgs = messagesRef.current.filter(m => m.text);
+    if (msgs.length === 0) return;
+    const { supabase } = await import('../lib/supabase');
+    if (!supabase) {
+      showToast(language === 'ar' ? 'مشاركة غير متاحة' : 'Sharing not available', 'warning');
+      return;
+    }
+    const title = msgs.find(m => m.type === 'user')?.text?.slice(0, 50) || 'Shared conversation';
+    const { data, error } = await supabase
+      .from('shared_conversations')
+      .insert([{ title, messages: msgs }])
+      .select()
+      .single();
+    if (error) {
+      showToast(language === 'ar' ? 'فشل المشاركة' : 'Share failed', 'error');
+      return;
+    }
+    const shareUrl = `${window.location.origin}/share/${data.id}`;
+    try {
+      await navigator.clipboard.writeText(shareUrl);
+      showToast(language === 'ar' ? 'تم نسخ رابط المشاركة' : 'Share link copied!', 'success');
+    } catch {
+      showToast(shareUrl, 'neutral');
+    }
   };
 
   const handleToggleSidebar = () => {
@@ -581,6 +607,7 @@ function ChatPage() {
           onToggleCompact={handleToggleCompact}
           isCompact={isCompact}
           messages={messages}
+          onShare={handleShare}
         />
 
         <div className="chat-area">

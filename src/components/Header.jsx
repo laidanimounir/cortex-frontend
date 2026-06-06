@@ -4,7 +4,7 @@ import { useToast } from '../contexts/ToastContext';
 import { sendConversationEmail } from '../services/email';
 import jsPDF from 'jspdf';
 
-function Header({ onClearChat, onToggleCompact, isCompact, messages, onToggleSidebar, onToggleFocus, focusMode }) {
+function Header({ onClearChat, onToggleCompact, isCompact, messages, onToggleSidebar, onToggleFocus, focusMode, onShare }) {
   const { language, t } = useLanguage();
   const { showToast } = useToast();
 
@@ -218,6 +218,15 @@ function Header({ onClearChat, onToggleCompact, isCompact, messages, onToggleSid
                 </div>
               )}
             </div>
+
+            <button
+              className="action-btn"
+              onClick={() => { if (onShare) onShare(); }}
+              title="Share"
+              disabled={messages.length === 0}
+            >
+              🔗
+            </button>
 
             <button
               className="action-btn clear-btn"
