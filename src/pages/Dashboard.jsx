@@ -78,6 +78,9 @@ function Dashboard() {
     );
   }
 
+  /* FIX - null guard */
+  if (!stats) return null;
+
   const maxActivity = Math.max(...stats.weeklyActivity, 1);
 
   return (
