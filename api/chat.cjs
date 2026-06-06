@@ -45,7 +45,7 @@ module.exports = async (req, res) => {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const { messages, model } = req.body;
+  const { messages, model, language } = req.body;
 
   if (!messages || !Array.isArray(messages)) {
     return res.status(400).json({ error: 'messages array is required' });
@@ -62,6 +62,13 @@ module.exports = async (req, res) => {
     { role: 'system', content: SYSTEM_PROMPT },
     ...filteredMessages,
   ];
+
+  if (language) {
+    fullMessages.push({
+      role: 'system',
+      content: `You must respond in ${language} only. Never use Chinese. Never mix languages. If language is "ar", respond in Arabic only. If language is "en", respond in English only.`,
+    });
+  }
 
   if (model === 'cortex-vision') {
     const fallbackStream = await callOpenRouterFallback(fullMessages);
