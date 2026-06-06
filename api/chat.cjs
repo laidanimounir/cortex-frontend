@@ -5,6 +5,7 @@ const { SYSTEM_PROMPT } = require('./system-prompt.cjs');
 const MODEL_MAP = {
   'cortex-fast': 'llama-3.3-70b-versatile',
   'cortex-think': 'deepseek-r1-distill-llama-70b',
+  'cortex-vision': 'llama-3.3-70b-versatile',
 };
 
 const GROQ_CASCADE = [
