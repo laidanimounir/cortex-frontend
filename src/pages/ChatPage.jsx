@@ -208,13 +208,16 @@ function ChatPage() {
       ];
     }
 
+    /* FIX - detect message language */
+    const detectedLang = /[\u0600-\u06FF]/.test(questionText) ? 'ar' : 'en';
+
     await sendMessage({
       messages: withSystem,
       model,
-      language,
+      language: detectedLang,
       onFallback: () => {
         showToast(
-          language === 'ar' ? 'جاري التبديل للخادم الاحتياطي...' : 'Switching to backup provider...',
+          detectedLang === 'ar' ? 'جاري التبديل للخادم الاحتياطي...' : 'Switching to backup provider...',
           'neutral'
         );
       },
