@@ -7,6 +7,7 @@ import Sidebar from '../components/Sidebar';
 import ShortcutsModal from '../components/ShortcutsModal';
 import UserProfileSetup from '../components/UserProfileSetup';
 import { useLanguage } from '../contexts/LanguageContext';
+import { useToast } from '../contexts/ToastContext';
 
 import useKeyboardShortcuts from '../hooks/useKeyboardShortcuts';
 import useChatHistory from '../hooks/useChatHistory';
@@ -15,6 +16,7 @@ import '../App.css';
 
 function ChatPage() {
   const { language, t } = useLanguage();
+  const { showToast } = useToast();
   const [loading, setLoading] = useState(false);
   const [messages, setMessages] = useState([]);
   /* FIX - useRef for latest messages */
@@ -210,6 +212,12 @@ function ChatPage() {
       messages: withSystem,
       model,
       language,
+      onFallback: () => {
+        showToast(
+          language === 'ar' ? 'جاري التبديل للخادم الاحتياطي...' : 'Switching to backup provider...',
+          'neutral'
+        );
+      },
       onToken: (token) => {
         setIsTyping(false);
         setTypingStatus('');

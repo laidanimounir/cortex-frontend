@@ -1,4 +1,4 @@
-export async function sendMessage({ messages, model, language, onToken, onDone, onError }) {
+export async function sendMessage({ messages, model, language, onToken, onDone, onError, onFallback }) {
   try {
     let profilePrompt = null;
     try {
@@ -49,6 +49,10 @@ export async function sendMessage({ messages, model, language, onToken, onDone, 
           }
           try {
             const parsed = JSON.parse(data);
+            if (parsed.type === 'fallback' && onFallback) {
+              onFallback(parsed.message || 'Switching to backup provider...');
+              continue;
+            }
             if (parsed.token) {
               onToken(parsed.token);
             }

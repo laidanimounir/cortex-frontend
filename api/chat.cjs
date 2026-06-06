@@ -158,6 +158,8 @@ module.exports = async (req, res) => {
       let buffer = '';
       let isFirstFallbackChunk = true;
 
+      res.write(`data: ${JSON.stringify({ type: 'fallback', message: 'Switching to backup provider...' })}\n\n`);
+
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
