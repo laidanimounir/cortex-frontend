@@ -12,6 +12,8 @@ import { useToast } from '../contexts/ToastContext';
 import useKeyboardShortcuts from '../hooks/useKeyboardShortcuts';
 import useChatHistory from '../hooks/useChatHistory';
 import { sendMessage } from '../services/chat';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import '../App.css';
 
 function ChatPage() {
@@ -503,8 +505,10 @@ function ChatPage() {
             <span>Preview</span>
             <button onClick={() => setShowPreview(false)}>✕</button>
           </div>
-          <div className="preview-content">
-            {previewContent}
+          <div className="preview-content markdown-content">
+            <ReactMarkdown remarkPlugins={[remarkGfm]}>
+              {previewContent}
+            </ReactMarkdown>
           </div>
           <div className="preview-actions">
             <button onClick={() => downloadFile(previewType)}>
