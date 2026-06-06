@@ -37,8 +37,6 @@ async function streamGroqCascade(groq, messages, model, res) {
   const cascade = isThink ? GROQ_CASCADE_THINK : GROQ_CASCADE;
 
   for (const groqModel of cascade) {
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 15000);
     console.time(`groq-${groqModel}`);
 
     try {
@@ -47,9 +45,7 @@ async function streamGroqCascade(groq, messages, model, res) {
         messages,
         stream: true,
         max_tokens: 4096,
-        signal: controller.signal,
       });
-      clearTimeout(timeout);
 
       if (groqModel !== cascade[0]) {
         res.write(`data: ${JSON.stringify({ type: 'fallback', message: 'Optimizing...' })}\n\n`);
@@ -73,7 +69,6 @@ async function streamGroqCascade(groq, messages, model, res) {
       res.end();
       return;
     } catch (error) {
-      clearTimeout(timeout);
       console.error('[Groq Error]', {
         status: error.status,
         message: error.message,
@@ -104,6 +99,8 @@ async function streamOpenRouter(messages, res) {
     headers: {
       'Content-Type': 'application/json',
       'Authorization': `Bearer ${process.env.OPENROUTER_API_KEY}`,
+      'HTTP-Referer': 'http://localhost:5173',
+      'X-Title': 'Cortex',
     },
     body: JSON.stringify({
       model: 'google/gemini-flash-2.0',
