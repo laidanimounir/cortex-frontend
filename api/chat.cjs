@@ -115,15 +115,26 @@ module.exports = async (req, res) => {
 
   const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 
+  const groqController = new AbortController();
+  const groqTimeout = setTimeout(() => groqController.abort(), 15000);
+  console.time('groq-request');
+
   try {
     const stream = await groq.chat.completions.create({
       model: selectedModel,
       messages: fullMessages,
       stream: true,
       max_tokens: 4096,
+      signal: groqController.signal,
     });
+    clearTimeout(groqTimeout);
 
+    let isFirstChunk = true;
     for await (const chunk of stream) {
+      if (isFirstChunk) {
+        console.timeEnd('groq-request');
+        isFirstChunk = false;
+      }
       const token = chunk.choices?.[0]?.delta?.content || '';
       if (token) {
         res.write(`data: ${JSON.stringify({ token })}\n\n`);
@@ -140,10 +151,12 @@ module.exports = async (req, res) => {
     });
     // Always attempt fallback regardless of error type
     try {
+      console.time('openrouter-fallback');
       const fallbackStream = await callOpenRouterFallback(fullMessages);
       const reader = fallbackStream.getReader();
       const decoder = new TextDecoder();
       let buffer = '';
+      let isFirstFallbackChunk = true;
 
       while (true) {
         const { done, value } = await reader.read();
@@ -159,6 +172,10 @@ module.exports = async (req, res) => {
             } else {
               try {
                 const parsed = JSON.parse(data);
+                if (isFirstFallbackChunk && parsed.choices?.[0]?.delta?.content) {
+                  console.timeEnd('openrouter-fallback');
+                  isFirstFallbackChunk = false;
+                }
                 const token = parsed.choices?.[0]?.delta?.content || '';
                 if (token) {
                   res.write(`data: ${JSON.stringify({ token })}\n\n`);
