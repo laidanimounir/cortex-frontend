@@ -32,6 +32,7 @@ function ChatPage() {
   const [imageMode, setImageMode] = useState(false);
   /* FIX - separate error state */
   const [errorMsg, setErrorMsg] = useState(null);
+  const [fileIntent, setFileIntent] = useState(null);
 
   /* FIX - useRef for latest messages */
   const updateMessages = (updater) => {
@@ -46,6 +47,15 @@ function ChatPage() {
     const keywords = ['latest', 'today', 'current', 'news', '2024', '2025', '2026', 'who is', 'what happened', 'what is new', 'recent', 'update', 'breaking'];
     const lower = text.toLowerCase();
     return keywords.some(k => lower.includes(k));
+  };
+
+  const detectFileIntent = (text) => {
+    const lower = text.toLowerCase();
+    if (/(pdf|بي دي اف)/.test(lower)) return 'pdf';
+    if (/(word|docx|وورد|تقرير)/.test(lower)) return 'docx';
+    if (/(excel|xlsx|جدول بيانات|اكسل)/.test(lower)) return 'excel';
+    if (/(txt|نص|text)/.test(lower)) return 'txt';
+    return null;
   };
 
   const { chatHistory, saveChat, loadChat, deleteChat, renameChat } = useChatHistory();
@@ -210,6 +220,9 @@ function ChatPage() {
 
     /* FIX - detect message language */
     const detectedLang = /[\u0600-\u06FF]/.test(questionText) ? 'ar' : 'en';
+
+    const intent = detectFileIntent(questionText);
+    setFileIntent(intent);
 
     await sendMessage({
       messages: withSystem,
