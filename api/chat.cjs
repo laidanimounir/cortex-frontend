@@ -81,10 +81,72 @@ async function streamGroqCascade(groq, messages, model, res) {
       });
 
       if (groqModel === cascade[cascade.length - 1]) {
-        throw error;
+        // Level 5: OpenRouter handles after loop
       }
     }
   }
+
+  console.log('[Switching to OpenRouter]');
+  try {
+    await streamOpenRouter(messages, res);
+  } catch (error) {
+    console.error('[OpenRouter Error]', {
+      message: error.message,
+      status: error.status,
+    });
+    throw error;
+  }
+}
+
+async function streamOpenRouter(messages, res) {
+  const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${process.env.OPENROUTER_API_KEY}`,
+    },
+    body: JSON.stringify({
+      model: 'google/gemini-flash-2.0',
+      messages,
+      stream: true,
+    }),
+  });
+
+  if (!response.ok) {
+    throw new Error(`OpenRouter error: ${response.status}`);
+  }
+
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = '';
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    buffer += decoder.decode(value, { stream: true });
+    const lines = buffer.split('\n');
+    buffer = lines.pop();
+    for (const line of lines) {
+      if (line.startsWith('data: ')) {
+        const data = line.slice(6);
+        if (data === '[DONE]') {
+          res.write('data: [DONE]\n\n');
+        } else {
+          try {
+            const parsed = JSON.parse(data);
+            const token = parsed.choices?.[0]?.delta?.content || '';
+            if (token) {
+              res.write(`data: ${JSON.stringify({ token })}\n\n`);
+            }
+          } catch (e) {
+            // skip malformed chunks
+          }
+        }
+      }
+    }
+  }
+
+  res.end();
 }
 
 module.exports = async (req, res) => {
