@@ -346,7 +346,7 @@ function ChatPage() {
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
                 messages: [
-                  { role: 'system', content: 'Extract 1 key fact from this response in one short sentence, or return null if nothing worth remembering' },
+                  { role: 'system', content: 'From this text, extract ONE short fact about the user in maximum 8 words. Examples: \'User is a medical student\', \'User prefers Python\', \'User is a beginner\'. If nothing personal about the user, return exactly: null. Return ONLY the fact or null. Nothing else.' },
                   { role: 'user', content: lastBotMsg.text }
                 ],
                 model: 'cortex-fast',
@@ -372,7 +372,9 @@ function ChatPage() {
               memBuffer = '';
             }
             const fact = memText.replace(/^null$/i, '').trim();
-            if (fact && fact.length > 10) {
+            const wordCount = fact ? fact.split(/\s+/).length : 0;
+            const hasMarkdown = /[\*\#\|]/.test(fact);
+            if (fact && fact.length > 10 && wordCount <= 10 && !hasMarkdown) {
               setMemory(prev => {
                 const updated = [...prev, fact];
                 localStorage.setItem('cortex_memory', JSON.stringify(updated));
