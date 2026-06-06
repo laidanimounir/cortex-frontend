@@ -1036,6 +1036,39 @@ body.compact-mode .app-header {
 }
 
 /* Input Actions (icons on the right) */
+.file-active {
+  background: var(--accent-primary) !important;
+  color: white !important;
+}
+.file-attachment-badge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  padding: 4px 10px;
+  font-size: 12px;
+  color: var(--text-secondary);
+  max-width: 200px;
+}
+.file-attachment-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.file-attachment-remove {
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-size: 12px;
+  padding: 0 2px;
+  line-height: 1;
+}
+.file-attachment-remove:hover {
+  color: var(--text-primary);
+}
 .input-actions {
   display: flex;
   align-items: center;

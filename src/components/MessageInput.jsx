@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useLanguage } from '../contexts/LanguageContext';
 
 const MODEL_OPTIONS = [
@@ -7,12 +7,32 @@ const MODEL_OPTIONS = [
   { id: 'cortex-vision', labelKey: 'modelVision', descKey: 'modelVisionDesc', icon: '🎯' },
 ];
 
-function MessageInput({ onSendMessage, disabled, selectedModel, onModelChange, imageMode, onImageModeToggle }) {
+function MessageInput({ onSendMessage, disabled, selectedModel, onModelChange, imageMode, onImageModeToggle, fileAttachment, onFileAttach, onFileRemove }) {
   const { language, t } = useLanguage();
 
   const [input, setInput] = useState('');
   const [showModelMenu, setShowModelMenu] = useState(false);
   const menuRef = React.useRef(null);
+  const fileInputRef = useRef(null);
+
+  const handleFileChange = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const isImage = file.type.startsWith('image/');
+    const reader = new FileReader();
+    reader.onload = () => {
+      const result = reader.result;
+      if (typeof result === 'string') {
+        onFileAttach({ name: file.name, type: file.type, data: isImage ? result : result.split(',')[1], isImage });
+      }
+    };
+    if (isImage) {
+      reader.readAsDataURL(file);
+    } else {
+      reader.readAsDataURL(file);
+    }
+    e.target.value = '';
+  };
 
   useEffect(() => {
     function handleClickOutside(event) {
@@ -117,6 +137,28 @@ function MessageInput({ onSendMessage, disabled, selectedModel, onModelChange, i
         />
 
         <div className="input-actions">
+          <input
+            type="file"
+            ref={fileInputRef}
+            onChange={handleFileChange}
+            accept="image/*,.pdf,.docx,.doc,.txt"
+            style={{ display: 'none' }}
+          />
+          <button
+            type="button"
+            className={`tool-selector-btn ${fileAttachment ? 'file-active' : ''}`}
+            onClick={() => fileInputRef.current?.click()}
+            title={language === 'ar' ? 'إرفاق ملف' : 'Attach file'}
+            disabled={disabled}
+          >
+            📎
+          </button>
+          {fileAttachment && (
+            <div className="file-attachment-badge">
+              <span className="file-attachment-name">{fileAttachment.name}</span>
+              <button type="button" className="file-attachment-remove" onClick={onFileRemove}>✕</button>
+            </div>
+          )}
           <button
             type="submit"
             className="send-button"

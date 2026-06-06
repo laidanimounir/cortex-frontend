@@ -39,6 +39,7 @@ function ChatPage() {
   const [previewContent, setPreviewContent] = useState('');
   const [previewType, setPreviewType] = useState(null);
   const [memory, setMemory] = useState([]);
+  const [fileAttachment, setFileAttachment] = useState(null);
 
   useEffect(() => {
     const stored = localStorage.getItem('cortex_memory');
@@ -150,9 +151,11 @@ function ChatPage() {
       id: Date.now(),
       type: 'user',
       text: questionText,
-      metadata: null,
+      metadata: fileAttachment ? { file: fileAttachment } : null,
       model: null,
     };
+
+    setFileAttachment(null);
 
     if (imageMode) {
       const botMessage = {
@@ -243,10 +246,24 @@ function ChatPage() {
     /* FIX - message order */
     const baseMessages = [...messagesRef.current, userMessage];
     const apiMessages = baseMessages
-      .map(m => ({
-        role: m.type === 'user' ? 'user' : 'assistant',
-        content: m.text,
-      }))
+      .map(m => {
+        if (m.type === 'user' && m.metadata?.file) {
+          let content;
+          if (m.metadata.file.isImage) {
+            content = [
+              { type: 'text', text: m.text },
+              { type: 'image_url', image_url: { url: m.metadata.file.data } }
+            ];
+          } else {
+            content = `${m.text}\n\n[Attached file: ${m.metadata.file.name}]`;
+          }
+          return { role: 'user', content };
+        }
+        return {
+          role: m.type === 'user' ? 'user' : 'assistant',
+          content: m.text,
+        };
+      })
       .filter(msg =>
         !(msg.role === 'assistant' && 
           (msg.content?.includes('providers failed') || 
@@ -618,6 +635,9 @@ function ChatPage() {
           onModelChange={setSelectedModel}
           imageMode={imageMode}
           onImageModeToggle={() => setImageMode(prev => !prev)}
+          fileAttachment={fileAttachment}
+          onFileAttach={(f) => setFileAttachment(f)}
+          onFileRemove={() => setFileAttachment(null)}
         />
 
         <Footer />
