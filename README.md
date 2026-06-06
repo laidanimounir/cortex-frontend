@@ -76,6 +76,56 @@ Built by [Mounir](https://github.com/your-username), a 100% Algerian developer.
 └──────────────────────────────────────────────────────────────┘
 ```
 
+## Free API Providers Roadmap
+
+### Current Cascade (Active)
+Level 1: Groq — llama-3.3-70b-versatile (primary, fastest)
+Level 2: Groq — llama-3.1-8b-instant (fallback)
+Level 3: Groq — gemma2-9b-it (fallback)
+Level 4: Groq — mixtral-8x7b-32768 (fallback)
+Level 5: OpenRouter — google/gemini-flash-2.0 (last resort)
+
+### Planned Cascade Expansion (Future)
+The following providers will be added to maximize 
+free availability and eliminate downtime:
+
+| Provider | Models | Free Limit | Priority |
+|---|---|---|---|
+| NVIDIA NIM | 100+ models (llama, mistral, qwen, MiniMax) | 40 RPM, no daily limit | 🔴 High |
+| Cerebras | llama-3.3-70b, GPT-OSS | 1M token/day | 🔴 High |
+| Google Gemini | Gemini Flash 2.0/2.5 | 1500 req/day | 🔴 High |
+| OpenRouter :free | 27+ models (deepseek, llama, gemma) | 1000 req/day (after $10 one-time) | 🟡 Medium |
+| GitHub Models | GPT-4o, llama, mistral | 8K/request limited | 🟡 Medium |
+| Cloudflare Workers AI | llama, mistral | 10K req/day | 🟡 Medium |
+| Mistral API | Mistral models | Limited free tier | 🟡 Medium |
+| OpenCode Zen | MiMo V2, MiniMax M2.5, GLM-5 | 100 req/day | 🟢 Low (coding only) |
+
+### Target Cascade (After Expansion)
+Level 1: Groq llama-3.3-70b        — fastest, primary
+Level 2: Cerebras llama-3.3-70b    — 1M token/day backup
+Level 3: NVIDIA NIM                 — no daily limit, 40 RPM
+Level 4: Gemini Flash               — 1500 req/day
+Level 5: OpenRouter :free           — 1000 req/day
+Level 6: Cloudflare Workers AI      — 10K req/day
+Level 7: OpenRouter paid            — final fallback
+
+### Daily Capacity Estimate (After Expansion)
+| Provider | Requests/Day |
+|---|---|
+| Groq | ~700 |
+| Cerebras | ~6000 |
+| NVIDIA NIM | unlimited (40 RPM) |
+| Gemini Flash | 1500 |
+| OpenRouter | 1000 |
+| Cloudflare | 10000 |
+| Total | ~20000+ req/day |
+
+### Why This Matters
+- Zero downtime for users even during heavy load
+- No single point of failure
+- All providers are free with no credit card required
+- User never sees any error or switching indicator
+
 ### Model Naming
 
 The models are presented to users with simple, friendly names. The actual model providers and technical details are never exposed in the UI. This keeps the experience clean and focused on learning.
