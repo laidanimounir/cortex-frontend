@@ -46,6 +46,42 @@ function ChatPage() {
       try { setMemory(JSON.parse(stored)); } catch {}
     }
   }, []);
+
+  const [openTabs, setOpenTabs] = useState([]);
+
+  const openNewTab = (chatId, title) => {
+    const id = chatId || `chat-${Date.now()}`;
+    setOpenTabs(prev => {
+      if (prev.some(t => t.id === id)) return prev;
+      return [...prev, { id, title: title || 'New Chat', messages: [], createdAt: Date.now() }];
+    });
+    return id;
+  };
+
+  const closeTab = (id) => {
+    setOpenTabs(prev => {
+      const idx = prev.findIndex(t => t.id === id);
+      const updated = prev.filter(t => t.id !== id);
+      if (id === currentChatId && updated.length > 0) {
+        const nextIdx = Math.min(idx, updated.length - 1);
+        switchToTab(updated[nextIdx].id);
+      }
+      return updated;
+    });
+  };
+
+  const switchToTab = (id) => {
+    const tab = openTabs.find(t => t.id === id);
+    if (tab) {
+      if (messagesRef.current.length > 0 && currentChatId && currentChatId !== tab.id) {
+        saveChat(messagesRef.current, currentChatId);
+      }
+      const loaded = loadChat(id);
+      updateMessages(loaded || []);
+      setCurrentChatId(id);
+    }
+  };
+
   /* FIX - useRef for latest messages */
   const updateMessages = (updater) => {
     setMessages(prev => {
@@ -347,8 +383,10 @@ function ChatPage() {
       const chatId = currentChatId || `chat-${Date.now()}`;
       saveChat(messagesRef.current, chatId);
     }
-    setCurrentChatId(`chat-${Date.now()}`);
+    const newId = `chat-${Date.now()}`;
+    setCurrentChatId(newId);
     updateMessages([]);
+    openNewTab(newId);
     if (window.innerWidth < 768) {
       setIsSidebarOpen(false);
     }
@@ -427,6 +465,7 @@ function ChatPage() {
     if (loadedMessages) {
       updateMessages(loadedMessages);
       setCurrentChatId(chat.id);
+      openNewTab(chat.id, chat.title);
       if (window.innerWidth < 768) {
         setIsSidebarOpen(false);
       }
@@ -528,6 +567,28 @@ function ChatPage() {
         />
 
         <div className="chat-area">
+          {openTabs.length > 0 && (
+            <div className="tab-bar">
+              {openTabs.map(tab => (
+                <div
+                  key={tab.id}
+                  className={`tab-item${tab.id === currentChatId ? ' active' : ''}`}
+                  onClick={() => switchToTab(tab.id)}
+                >
+                  <span className="tab-title">
+                    {chatHistory.find(c => c.id === tab.id)?.title || tab.title}
+                  </span>
+                  <button
+                    className="tab-close"
+                    onClick={(e) => { e.stopPropagation(); closeTab(tab.id); }}
+                  >
+                    ✕
+                  </button>
+                </div>
+              ))}
+              <button className="tab-new" onClick={handleNewChat} title="New tab">+</button>
+            </div>
+          )}
           <ChatWindow
             messages={messages}
             isTyping={isTyping}
