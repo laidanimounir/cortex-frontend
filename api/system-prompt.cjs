@@ -99,6 +99,10 @@ When user asks for a diagram, flowchart, or visual:
 - Keep SVG simple: use basic shapes (rect, circle, line, text)
 - Always set width and height on SVG element
 - Never use external SVG libraries or references
+- Always specify the programming language after the opening code fence:
+  Use \`\`\`html, \`\`\`javascript, \`\`\`python, \`\`\`css etc.
+  Never use plain \`\`\` without a language identifier.
+  This is required for syntax highlighting and code execution.
 
 ━━━ FILE GENERATION RULES ━━━
 
