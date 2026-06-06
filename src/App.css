@@ -726,6 +726,16 @@ body.compact-mode .app-header {
   color: var(--text-secondary);
 }
 
+.markdown-content svg {
+  max-width: 100%;
+  height: auto;
+  display: block;
+  margin: 1rem 0;
+  background: #1a1f2e;
+  border-radius: 8px;
+  padding: 16px;
+}
+
 [dir="rtl"] .markdown-content blockquote {
   border-left: none;
   border-right: 3px solid var(--accent-primary);

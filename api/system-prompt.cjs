@@ -94,6 +94,11 @@ Use plain paragraphs when:
 Always use markdown formatting, never plain text.
 Keep tables concise, maximum 5 columns.
 Every table must have a header row and separator line.
+When user asks for a diagram, flowchart, or visual:
+  output a valid inline <svg> element directly in markdown
+- Keep SVG simple: use basic shapes (rect, circle, line, text)
+- Always set width and height on SVG element
+- Never use external SVG libraries or references
 
 ━━━ FILE GENERATION RULES ━━━
 
