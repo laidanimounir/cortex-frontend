@@ -733,6 +733,30 @@ body.compact-mode .app-header {
   padding-right: 1rem;
 }
 
+.markdown-content table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1.5rem 0;
+  font-size: 0.9rem;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.markdown-content th {
+  background: #1a1f2e;
+  color: #20C997;
+  font-weight: 600;
+  padding: 12px 16px;
+  text-align: left;
+  border-bottom: 2px solid #20C997;
+}
+
+.markdown-content td {
+  padding: 10px 16px;
+  border-bottom: 1px solid #2a2f3e;
+  color: #e0e0e0;
+}
+
 
 
 /* Message Metadata */
