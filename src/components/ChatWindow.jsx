@@ -173,6 +173,13 @@ function ChatWindow({ messages, isTyping, typingStatus, onSelectSuggestion, onRe
                             </code>
                           );
                         },
+                        table({ children }) {
+                          return (
+                            <div style={{ overflowX: 'auto', width: '100%' }}>
+                              <table>{children}</table>
+                            </div>
+                          );
+                        },
                       }}
                     >
                       {preprocessMath(msg.text)}
