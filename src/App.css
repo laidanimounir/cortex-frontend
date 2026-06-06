@@ -733,6 +733,54 @@ body.compact-mode .app-header {
   padding-right: 1rem;
 }
 
+/* Preview Panel */
+.preview-panel {
+  width: 400px;
+  min-width: 350px;
+  background: #16181D;
+  border-left: 1px solid #2a2f3e;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  position: sticky;
+  top: 0;
+}
+
+.preview-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px;
+  border-bottom: 1px solid #2a2f3e;
+  color: #20C997;
+  font-weight: 600;
+}
+
+.preview-content {
+  flex: 1;
+  padding: 16px;
+  overflow-y: auto;
+  color: #e0e0e0;
+  font-size: 0.9rem;
+  white-space: pre-wrap;
+}
+
+.preview-actions {
+  padding: 16px;
+  border-top: 1px solid #2a2f3e;
+}
+
+.preview-actions button {
+  width: 100%;
+  padding: 10px;
+  background: #20C997;
+  color: #0B0D12;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
 .markdown-content table {
   width: 100%;
   border-collapse: collapse;

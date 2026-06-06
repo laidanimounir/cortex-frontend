@@ -33,6 +33,9 @@ function ChatPage() {
   /* FIX - separate error state */
   const [errorMsg, setErrorMsg] = useState(null);
   const [fileIntent, setFileIntent] = useState(null);
+  const [showPreview, setShowPreview] = useState(false);
+  const [previewContent, setPreviewContent] = useState('');
+  const [previewType, setPreviewType] = useState(null);
 
   /* FIX - useRef for latest messages */
   const updateMessages = (updater) => {
@@ -257,6 +260,14 @@ function ChatPage() {
         setLoading(false);
         setIsTyping(false);
         setTypingStatus('');
+        if (intent) {
+          const lastBot = messagesRef.current.filter(m => m.type === 'bot').pop();
+          if (lastBot) {
+            setPreviewContent(lastBot.text);
+            setPreviewType(intent);
+            setShowPreview(true);
+          }
+        }
       },
       onError: (errText) => {
         /* FIX - clean user message on error */
@@ -440,6 +451,23 @@ function ChatPage() {
 
         <Footer />
       </div>
+
+      {showPreview && (
+        <div className="preview-panel">
+          <div className="preview-header">
+            <span>Preview</span>
+            <button onClick={() => setShowPreview(false)}>✕</button>
+          </div>
+          <div className="preview-content">
+            {previewContent}
+          </div>
+          <div className="preview-actions">
+            <button onClick={() => downloadFile(previewType)}>
+              ⬇ Download {previewType?.toUpperCase()}
+            </button>
+          </div>
+        </div>
+      )}
 
       {focusMode && (
         <button className="focus-exit-btn" onClick={handleToggleFocus} title="Exit Focus Mode">
