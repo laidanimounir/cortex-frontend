@@ -39,6 +39,10 @@ Built by [Mounir](https://github.com/your-username), a 100% Algerian developer.
 - ✅ **Code Block Enhancements**: Line numbers and programming language labels on every code block
 - ✅ **Developer Dashboard**: Password-protected analytics at `/dashboard` — usage stats, model breakdown, weekly chart
 - ✅ **Supabase Sync**: Optional cloud sync for chat history, falls back to localStorage when unconfigured
+- ✅ **Groq Cascade (4 models)**: Auto-retry on failure — no more single point of failure
+- ✅ **Auto Language Detection**: AR/EN automatically detected from user message text
+- ✅ **Fallback Toast Notification**: Subtle "Optimizing..." toast when switching models in cascade
+- ✅ **Dashboard Stability**: Graceful handling of missing localStorage
 
 ---
 
@@ -52,14 +56,15 @@ Built by [Mounir](https://github.com/your-username), a 100% Algerian developer.
 │  Features: MathRenderer, ImageGen, WebSearch, UserProfile    │
 ├──────────────────────────────────────────────────────────────┤
 │              Dev Server (localhost:3001)                      │
-│  POST /  → api/chat.cjs    → Groq AI (primary)              │
-│            api/fallback.cjs → OpenRouter (fallback)          │
-│  POST /search → api/search.cjs → Tavily API (web search)    │
+│  POST /  → api/chat.cjs → Groq Cascade (4 models)           │
+│  POST /search → api/search.cjs → Tavily API                  │
 ├──────────────────────────────────────────────────────────────┤
-│  Models (display names only, never revealed):                 │
-│  - Cortex Fast   → llama-3.3-70b on Groq                     │
-│  - Cortex Think  → deepseek-r1-distill-llama-70b             │
-│  - Cortex Vision → gemini-flash-2.0 on OpenRouter            │
+│  Groq Cascade (retries down on failure):                     │
+│  - cortex-fast  → llama-3.3-70b → llama-3.1-8b              │
+│                   → gemma2-9b-it → mixtral-8x7b              │
+│  - cortex-think → deepseek-r1 → (same cascade above)        │
+│  - cortex-vision → uses cascade / no separate provider       │
+│  - Future: OpenRouter Level 5 when OPENROUTER_API_KEY set    │
 ├──────────────────────────────────────────────────────────────┤
 │  Storage:                                                    │
 │  - localStorage (default: history, ratings, profile)         │
@@ -97,7 +102,7 @@ Create a `.env` file in the project root:
 
 ```env
 GROQ_API_KEY=your_groq_api_key
-OPENROUTER_API_KEY=your_openrouter_api_key
+OPENROUTER_API_KEY=your_openrouter_api_key   # Optional: future fallback
 VITE_EMAILJS_SERVICE_ID=your_emailjs_service_id
 VITE_EMAILJS_TEMPLATE_ID=your_emailjs_template_id
 VITE_EMAILJS_PUBLIC_KEY=your_emailjs_public_key
@@ -139,7 +144,7 @@ Set the environment variables in the Vercel dashboard.
 | Variable | Description | Required |
 |---|---|---|---|
 | `GROQ_API_KEY` | API key for Groq cloud | Yes |
-| `OPENROUTER_API_KEY` | API key for OpenRouter fallback | Yes |
+| `OPENROUTER_API_KEY` | API key for OpenRouter fallback | Optional — future fallback |
 | `VITE_EMAILJS_SERVICE_ID` | EmailJS service ID | Optional |
 | `VITE_EMAILJS_TEMPLATE_ID` | EmailJS template ID | Optional |
 | `VITE_EMAILJS_PUBLIC_KEY` | EmailJS public key | Optional |
@@ -191,6 +196,14 @@ Set the environment variables in the Vercel dashboard.
 - ✅ 👍 vs 👎 rating summary
 - ✅ Language usage (EN vs AR)
 - ✅ "Back to Chat" navigation
+
+#### G — Reliability & Resilience
+- ✅ **Groq Cascade (4 models)**: auto-retry on failure — no more single point of failure
+- ✅ **Auto Language Detection**: AR/EN detected from message text, not UI toggle
+- ✅ **Explicit Language Injection**: fixes DeepSeek Chinese output
+- ✅ **15s Timeout per model**: prevents hanging on overloaded provider
+- ✅ **Fallback Toast**: subtle "Optimizing..." notification when model switches
+- ✅ **Dashboard Null Guard**: graceful handling of empty localStorage
 
 ### Phase 3 — Future Vision
 
@@ -249,6 +262,56 @@ and returned as "All providers failed" with no logging.
 **Files Changed:**
 - `api/chat.cjs` — lines 44-47 (trimming), 112 (fallback trigger), 146 (error logging)
 - `src/[your chat component]` — error display handler
+
+### 🐛 DeepSeek outputs Chinese despite EN system prompt
+
+**Root Cause:**
+The `cortex-think` model (`deepseek-r1-distill-llama-70b`) has a strong training bias toward Chinese. Even with a system prompt requesting English, DeepSeek occasionally responded in Chinese.
+
+**Fixes Applied:**
+- ✅ An explicit `You must respond in {language} only. Never use Chinese.` system message is injected after the main SYSTEM_PROMPT
+- ✅ Language is auto-detected from the user's message text (Arabic Unicode range check) rather than relying on the UI toggle
+
+**Files Changed:**
+- `api/chat.cjs` — language injection after fullMessages assembly line 66-71
+- `src/pages/ChatPage.jsx` — auto-detection override before sendMessage call
+
+### 🐛 Groq hangs indefinitely under load
+
+**Root Cause:**
+The `groq-sdk` HTTP call had no timeout. When Groq was overloaded or network was slow, the connection never resolved, leaving the user stuck at "Typing..." forever.
+
+**Fixes Applied:**
+- ✅ Added 15-second `AbortController` timeout on every Groq model call
+- ✅ Cascade moves to the next model if a model times out
+- ✅ Both first-chunk latency and total request time logged via `console.time`
+
+### 🐛 Single Groq model = single point of failure
+
+**Root Cause:**
+Only one model was configured per alias. Rate limits (429), quota exhaustion, or transient errors killed the session with no recovery.
+
+**Fixes Applied:**
+- ✅ 4-level Groq cascade: `llama-3.3-70b` → `llama-3.1-8b` → `gemma2-9b-it` → `mixtral-8x7b`
+- ✅ `cortex-think` tries `deepseek-r1-distill-llama-70b` first, then falls through to same cascade
+- ✅ Each model gets its own 15s timeout before the next is tried
+- ✅ SSE `{"type":"fallback"}` event sent so frontend can show "Optimizing..." toast
+- ✅ Final failure returns `502` with `"All providers failed"` + reason
+
+**Files Changed:**
+- `api/chat.cjs` — entire file rewritten for cascade logic
+- `src/services/chat.js` — `onFallback` callback support
+
+### 🐛 Dashboard crashes when localStorage is empty
+
+**Root Cause:**
+`Dashboard.jsx` tried to access `stats.weeklyActivity` before checking if `stats` was null, causing a runtime crash on first visit with no chat history.
+
+**Fixes Applied:**
+- ✅ Added `if (!stats) return null;` guard before accessing stats properties
+
+**Files Changed:**
+- `src/pages/Dashboard.jsx` — null guard on stats
 
 ---
 
