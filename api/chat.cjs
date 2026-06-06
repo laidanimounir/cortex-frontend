@@ -19,27 +19,6 @@ function trimMessages(messages, maxMessages = 10, maxCharsPerMessage = 6000) {
   }));
 }
 
-async function callOpenRouterFallback(messages) {
-  const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${process.env.OPENROUTER_API_KEY}`,
-    },
-    body: JSON.stringify({
-      model: 'google/gemini-flash-2.0',
-      messages,
-      stream: true,
-    }),
-  });
-
-  if (!response.ok) {
-    throw new Error(`OpenRouter fallback failed: ${response.status}`);
-  }
-
-  return response.body;
-}
-
 module.exports = async (req, res) => {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
@@ -68,45 +47,6 @@ module.exports = async (req, res) => {
       role: 'system',
       content: `You must respond in ${language} only. Never use Chinese. Never mix languages. If language is "ar", respond in Arabic only. If language is "en", respond in English only.`,
     });
-  }
-
-  if (model === 'cortex-vision') {
-    const fallbackStream = await callOpenRouterFallback(fullMessages);
-    res.setHeader('Content-Type', 'text/event-stream');
-    res.setHeader('Cache-Control', 'no-cache');
-    res.setHeader('X-Accel-Buffering', 'no');
-    const reader = fallbackStream.getReader();
-    const decoder = new TextDecoder();
-    let buffer = '';
-
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-      buffer += decoder.decode(value, { stream: true });
-      const lines = buffer.split('\n');
-      buffer = lines.pop();
-      for (const line of lines) {
-        if (line.startsWith('data: ')) {
-          const data = line.slice(6);
-          if (data === '[DONE]') {
-            res.write('data: [DONE]\n\n');
-          } else {
-            try {
-              const parsed = JSON.parse(data);
-              const token = parsed.choices?.[0]?.delta?.content || '';
-              if (token) {
-                res.write(`data: ${JSON.stringify({ token })}\n\n`);
-              }
-            } catch (e) {
-              // skip malformed chunks
-            }
-          }
-        }
-      }
-    }
-
-    res.end();
-    return;
   }
 
   res.setHeader('Content-Type', 'text/event-stream');
@@ -149,67 +89,17 @@ module.exports = async (req, res) => {
       status: error.status,
       message: error.message,
     });
-    // Always attempt fallback regardless of error type
-    try {
-      console.time('openrouter-fallback');
-      const fallbackStream = await callOpenRouterFallback(fullMessages);
-      const reader = fallbackStream.getReader();
-      const decoder = new TextDecoder();
-      let buffer = '';
-      let isFirstFallbackChunk = true;
-
-      res.write(`data: ${JSON.stringify({ type: 'fallback', message: 'Switching to backup provider...' })}\n\n`);
-
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        buffer += decoder.decode(value, { stream: true });
-        const lines = buffer.split('\n');
-        buffer = lines.pop();
-        for (const line of lines) {
-          if (line.startsWith('data: ')) {
-            const data = line.slice(6);
-            if (data === '[DONE]') {
-              res.write('data: [DONE]\n\n');
-            } else {
-              try {
-                const parsed = JSON.parse(data);
-                if (isFirstFallbackChunk && parsed.choices?.[0]?.delta?.content) {
-                  console.timeEnd('openrouter-fallback');
-                  isFirstFallbackChunk = false;
-                }
-                const token = parsed.choices?.[0]?.delta?.content || '';
-                if (token) {
-                  res.write(`data: ${JSON.stringify({ token })}\n\n`);
-                }
-              } catch (e) {
-                // skip malformed chunks
-              }
-            }
-          }
-        }
-      }
-
-      res.end();
-    } catch (fallbackError) {
-      /* FIX 3 - Error Logging */
-      console.error('[Fallback Error]', {
-        status: fallbackError.status,
-        message: fallbackError.message,
-        stack: fallbackError.stack,
+    /* FIX 3 - headers guard */
+    if (!res.headersSent) {
+      res.status(502).json({
+        error: 'All providers failed',
+        reason: error.message,
       });
-      /* FIX 3 - headers guard */
-      if (!res.headersSent) {
-        res.status(502).json({
-          error: 'All providers failed',
-          reason: fallbackError.message,
-        });
-      } else {
-        res.write(`data: ${JSON.stringify({ 
-          error: 'All providers failed' 
-        })}\n\n`);
-        res.end();
-      }
+    } else {
+      res.write(`data: ${JSON.stringify({ 
+        error: 'All providers failed' 
+      })}\n\n`);
+      res.end();
     }
   }
 };
