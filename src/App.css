@@ -2026,6 +2026,66 @@ body.compact-mode .app-header {
   font-size: 0.7rem;
 }
 
+.code-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.code-run-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0.2rem 0.5rem;
+  background: #2ea043;
+  border: 1px solid #3fb950;
+  border-radius: 6px;
+  color: #fff;
+  font-size: 0.7rem;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.2s;
+}
+.code-run-btn:hover {
+  background: #238636;
+}
+.code-runner-output {
+  border: 1px solid var(--border-color);
+  border-radius: 0 0 8px 8px;
+  overflow: hidden;
+  margin-top: -1px;
+}
+.code-runner-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 12px;
+  background: var(--bg-tertiary);
+  border-bottom: 1px solid var(--border-color);
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+.code-runner-label {
+  font-weight: 600;
+}
+.code-runner-close {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 14px;
+  padding: 0 4px;
+}
+.code-runner-close:hover {
+  color: var(--text-primary);
+}
+.code-runner-iframe {
+  width: 100%;
+  height: 200px;
+  border: none;
+  background: #fff;
+}
+
 .code-block-wrapper pre {
   margin: 0;
   border-radius: 0 0 8px 8px;
