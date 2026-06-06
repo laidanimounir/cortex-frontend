@@ -43,6 +43,7 @@ Built by [Mounir](https://github.com/your-username), a 100% Algerian developer.
 - ✅ **Auto Language Detection**: AR/EN automatically detected from user message text
 - ✅ **Fallback Toast Notification**: Subtle "Optimizing..." toast when switching models in cascade
 - ✅ **Dashboard Stability**: Graceful handling of missing localStorage
+- ✅ **File Generation & Preview**: Auto-detected PDF, DOCX, Excel, TXT export with split-panel preview
 
 ---
 
@@ -152,6 +153,21 @@ Set the environment variables in the Vercel dashboard.
 | `VITE_SUPABASE_URL` | Supabase project URL | Optional |
 | `VITE_SUPABASE_ANON_KEY` | Supabase anonymous key | Optional |
 
+### Dependencies
+
+| Package | Version | Purpose |
+|---|---|---|
+| `groq-sdk` | ^1.2.0 | Groq AI API client |
+| `jspdf` | ^3.0.4 | PDF file generation |
+| `docx` | ^x.x.x | DOCX file generation |
+| `xlsx` | ^x.x.x | Excel file generation |
+| `katex` | ^0.17.0 | Math rendering |
+| `react-markdown` | ^10.1.0 | Markdown rendering |
+| `react-syntax-highlighter` | ^16.1.0 | Code highlighting |
+| `remark-gfm` | ^4.0.1 | GitHub-flavored markdown tables |
+| `@supabase/supabase-js` | ^2.106.2 | Optional cloud sync |
+| `@emailjs/browser` | ^4.4.1 | Email sharing |
+
 ---
 
 ## Roadmap
@@ -204,6 +220,18 @@ Set the environment variables in the Vercel dashboard.
 - ✅ **15s Timeout per model**: prevents hanging on overloaded provider
 - ✅ **Fallback Toast**: subtle "Optimizing..." notification when model switches
 - ✅ **Dashboard Null Guard**: graceful handling of empty localStorage
+
+#### H — File Generation & Preview
+- ✅ Auto-detects file intent from user message (PDF, DOCX, Excel, TXT)
+- ✅ Split-panel layout: chat on left, preview on right
+- ✅ Preview renders markdown before download
+- ✅ Supported formats:
+  - **PDF** — via jsPDF
+  - **DOCX** — via docx.js
+  - **Excel** — via SheetJS (xlsx)
+  - **TXT** — plain text
+- ✅ One-click download button
+- ✅ No fake URLs or placeholders in generated content (enforced via system prompt)
 
 ### Phase 3 — Future Vision
 
