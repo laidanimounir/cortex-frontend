@@ -65,11 +65,11 @@ Built by [Mounir](https://github.com/your-username), a 100% Algerian developer.
 │                   → gemma2-9b-it → mixtral-8x7b              │
 │  - cortex-think → deepseek-r1 → (same cascade above)        │
 │  - cortex-vision → uses cascade / no separate provider       │
-│  - Future: OpenRouter Level 5 when OPENROUTER_API_KEY set    │
+│  - OpenRouter Level 5 (optional, when OPENROUTER_API_KEY set) │
 ├──────────────────────────────────────────────────────────────┤
 │  Storage:                                                    │
-│  - localStorage (default: history, ratings, profile)         │
-│  - Supabase (optional: syncs chat history across devices)    │
+│  - localStorage: history, ratings, profile, memory, tabs     │
+│  - Supabase: chat sync, shared_conversations                 │
 │  External APIs:                                              │
 │  - Pollinations.ai (free image generation, no key needed)    │
 │  - Tavily API (web search, requires TAVILY_API_KEY)          │
@@ -143,9 +143,9 @@ Set the environment variables in the Vercel dashboard.
 ## Environment Variables
 
 | Variable | Description | Required |
-|---|---|---|---|
+|---|---|---|
 | `GROQ_API_KEY` | API key for Groq cloud | Yes |
-| `OPENROUTER_API_KEY` | API key for OpenRouter fallback | Optional — future fallback |
+| `OPENROUTER_API_KEY` | API key for OpenRouter fallback (Level 5) | Optional — Level 5 fallback |
 | `VITE_EMAILJS_SERVICE_ID` | EmailJS service ID | Optional |
 | `VITE_EMAILJS_TEMPLATE_ID` | EmailJS template ID | Optional |
 | `VITE_EMAILJS_PUBLIC_KEY` | EmailJS public key | Optional |
@@ -233,6 +233,16 @@ Set the environment variables in the Vercel dashboard.
 - ✅ One-click download button
 - ✅ No fake URLs or placeholders in generated content (enforced via system prompt)
 
+#### I — New Features Added
+- ✅ **Persistent Memory**: extracts key user facts after each response, stores in localStorage, displayed in sidebar with delete option
+- ✅ **Multi-tab Conversations**: tab bar above chat with open/close/switch tabs
+- ✅ **File Upload**: paperclip button in message input, supports images (base64, `image_url`), PDF/DOCX (filename note)
+- ✅ **Share via Link**: share button in header, stores conversation in Supabase `shared_conversations` table, read-only view at `/share/:id`
+- ✅ **Runnable Code Artifacts**: Run button on HTML/JS/JSX code blocks, executes in sandboxed iframe (`allow-scripts`)
+- ✅ **SVG Diagram Rendering**: AI outputs inline SVG when asked for diagrams/flowcharts, rendered directly in chat via rehypeRaw
+- ✅ **Professional Tables**: dark theme with alternating row colors, hover highlight, mobile overflow wrapper
+- ✅ **Code Block Language Requirement**: system prompt now requires language identifier on all code fences for syntax highlighting and Run button
+
 ### Phase 3 — Future Vision
 
 - [ ] **Image generation (advanced)** — Stable Diffusion integration for higher quality
@@ -288,8 +298,8 @@ and returned as "All providers failed" with no logging.
 - ✅ User sees a friendly error message instead of raw error text
 
 **Files Changed:**
-- `api/chat.cjs` — lines 44-47 (trimming), 112 (fallback trigger), 146 (error logging)
-- `src/[your chat component]` — error display handler
+- `api/chat.cjs` — `trimMessages`, fallback trigger on all errors, error logging
+- `src/components/ChatWindow.jsx` — error display handler
 
 ### 🐛 DeepSeek outputs Chinese despite EN system prompt
 
@@ -301,7 +311,7 @@ The `cortex-think` model (`deepseek-r1-distill-llama-70b`) has a strong training
 - ✅ Language is auto-detected from the user's message text (Arabic Unicode range check) rather than relying on the UI toggle
 
 **Files Changed:**
-- `api/chat.cjs` — language injection after fullMessages assembly line 66-71
+- `api/chat.cjs` — language injection after fullMessages assembly
 - `src/pages/ChatPage.jsx` — auto-detection override before sendMessage call
 
 ### 🐛 Groq hangs indefinitely under load
@@ -320,15 +330,27 @@ The `groq-sdk` HTTP call had no timeout. When Groq was overloaded or network was
 Only one model was configured per alias. Rate limits (429), quota exhaustion, or transient errors killed the session with no recovery.
 
 **Fixes Applied:**
-- ✅ 4-level Groq cascade: `llama-3.3-70b` → `llama-3.1-8b` → `gemma2-9b-it` → `mixtral-8x7b`
+- ✅ 5-level cascade: `llama-3.3-70b` → `llama-3.1-8b` → `gemma2-9b-it` → `mixtral-8x7b` → OpenRouter (optional)
 - ✅ `cortex-think` tries `deepseek-r1-distill-llama-70b` first, then falls through to same cascade
 - ✅ Each model gets its own 15s timeout before the next is tried
 - ✅ SSE `{"type":"fallback"}` event sent so frontend can show "Optimizing..." toast
 - ✅ Final failure returns `502` with `"All providers failed"` + reason
 
 **Files Changed:**
-- `api/chat.cjs` — entire file rewritten for cascade logic
+- `api/chat.cjs` — cascade logic with 5 levels, timeout, SSE fallback events
 - `src/services/chat.js` — `onFallback` callback support
+
+### 🐛 Code blocks missing language identifier break Run button
+
+**Root Cause:**
+AI-generated code blocks without a language identifier (plain ```) could not be made runnable because CodeRunner needs to know the language to determine whether to render an iframe with HTML wrapper or raw code.
+
+**Fixes Applied:**
+- ✅ System prompt updated to require language identifier on every code fence (e.g. ```html, ```javascript, ```python)
+- ✅ Plain ``` without a language is no longer valid output
+
+**Files Changed:**
+- `api/system-prompt.cjs` — FORMATTING RULES update
 
 ### 🐛 Dashboard crashes when localStorage is empty
 
