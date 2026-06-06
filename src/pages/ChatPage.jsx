@@ -317,7 +317,7 @@ function ChatPage() {
           )
         );
       },
-      onDone: () => {
+      onDone: async () => {
         updateMessages(prev => {
           let updated = prev.map(m =>
             m.id === botMessageId
